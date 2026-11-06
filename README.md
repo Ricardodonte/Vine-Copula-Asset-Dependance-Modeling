@@ -1,43 +1,43 @@
-# Vine copulas et optimisation de portefeuille
+# Vine Copula Asset Dependence Modeling
 
-Étude des dépendances extrêmes entre le SPY, le Bitcoin, le BND et l’or. Le projet estime des marges ARMA-EGARCH et une R-vine, puis compare les stratégies d’allocation et les prévisions de VaR et d’Expected Shortfall hors échantillon.
+This study models tail dependence among SPY, Bitcoin, BND, and gold with ARMA-EGARCH margins and an R-vine copula. The out-of-sample backtests compare portfolio allocation strategies and evaluate Value at Risk (VaR) and Expected Shortfall (ES) forecasts.
 
-[Lire le rapport](report/rapport.pdf)
+[Read the report](report/report.pdf)
 
-## Structure
+## Repository structure
 
-| Dossier | Contenu |
+| Directory | Contents |
 | --- | --- |
-| `R/` | Fonctions de modélisation, d’optimisation et de backtest de risque |
-| `scripts/` | Lancement de l’analyse et scripts par étape |
-| `data/` | Instructions pour préparer les deux fichiers de prix |
-| `report/` | Sources LaTeX, figures intégrées et PDF |
-| `results/` | Tableaux, figures et caches produits localement |
+| `R/` | Models, portfolio optimization, and risk tests |
+| `scripts/` | Analysis entry point and individual stages |
+| `data/` | Instructions for preparing the price files |
+| `report/` | LaTeX sources, figures, and the PDF |
+| `results/` | Tables, figures, and caches generated locally |
 
-## Relancer l’analyse
+## Run the analysis
 
-Installer les packages dans R, puis préparer les fichiers décrits dans [data/README.md](data/README.md).
+Install the packages in R and prepare the inputs described in [data/README.md](data/README.md).
 
 ```r
 install.packages(c("rugarch", "VineCopula", "quadprog", "Rglpk", "slam",
                    "ggplot2", "moments", "numDeriv"))
 ```
 
-Depuis la racine du dépôt :
+From the repository root, run:
 
 ```sh
 Rscript scripts/run_all.R
 Rscript scripts/run_all.R manual
 ```
 
-La première commande utilise `rugarch`. La seconde utilise l’implémentation manuelle des marges EGARCH et de la Student standardisée. Les deux modes écrivent séparément dans `results/rugarch/` et `results/manual/`. Le backtest complet peut prendre du temps, en particulier sous Windows.
+The first command uses `rugarch`. The second uses the manual implementation of the EGARCH margins and standardized Student-t distribution. The two modes write to `results/rugarch/` and `results/manual/`, respectively. The full backtest can take a while, particularly on Windows.
 
-## Recompiler le rapport
+## Build the report
 
-Depuis le dossier `report/` :
+From the `report/` directory, run:
 
 ```sh
-latexmk -pdf -jobname=rapport main.tex
+latexmk -pdf -jobname=report main.tex
 ```
 
-Les figures nécessaires à la compilation sont dans `report/figures/`. Les fichiers intermédiaires de LaTeX, les données brutes et les résultats générés sont ignorés par Git.
+The figures required to compile the report are in `report/figures/`. Git ignores raw data, generated results, and LaTeX build files.

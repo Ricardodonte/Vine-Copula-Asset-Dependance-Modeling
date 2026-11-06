@@ -12,12 +12,12 @@ min_var_weights <- function(S, wmax = W_MAX) {
   w <- pmax(sol$solution, 0); w / sum(w)
 }
 
-# Programme linéaire de Rockafellar-Uryasev. alpha = 0,05 cible la CVaR à 95 %.
+# Rockafellar-Uryasev linear program. alpha = 0.05 targets 95% CVaR.
 min_cvar_weights <- function(R, alpha = 0.05, wmax = W_MAX) {
   n <- nrow(R); d <- ncol(R)
-  # On minimise VaR + moyenne(u) / alpha, où u contient les pertes excédentaires.
+  # Minimize VaR + mean(u) / alpha, where u is the excess loss.
   obj <- c(rep(0, d), 1, rep(1 / (alpha * n), n))
-  # Chaque scénario impose R_i w + VaR + u_i >= 0. La dernière ligne fixe le budget.
+  # Each scenario imposes R_i w + VaR + u_i >= 0. The last row sets the budget.
   ii <- c(rep(seq_len(n), d), seq_len(n), seq_len(n), rep(n + 1, d))
   jj <- c(rep(seq_len(d), each = n), rep(d + 1, n), d + 1 + seq_len(n), seq_len(d))
   vv <- c(as.vector(R), rep(1, n), rep(1, n), rep(1, d))
@@ -48,16 +48,16 @@ perf_metrics <- function(r, rf = 0.02, turnover = NULL) {
   rf_d <- (1 + rf)^(1 / ann) - 1
   down <- sqrt(mean(pmin(r - rf_d, 0)^2)) * sqrt(ann)
   var95 <- -quantile(r, 0.05)
-  out <- c(`Rendement total (%)` = 100 * (wealth[length(wealth)] - 1),
-           `Rendement annuel (%)` = 100 * ar,
-           `Volatilité annuelle (%)` = 100 * vol,
+  out <- c(`Total return (%)` = 100 * (wealth[length(wealth)] - 1),
+           `Annualized return (%)` = 100 * ar,
+           `Annualized volatility (%)` = 100 * vol,
            Sharpe = (ar - rf) / vol,
            Sortino = (ar - rf) / down,
            `Max drawdown (%)` = 100 * min(dd),
            Calmar = ar / abs(min(dd)),
-           `VaR 95 % jour (%)` = 100 * unname(var95),
-           `CVaR 95 % jour (%)` = 100 * -mean(r[r <= -var95]))
-  if (!is.null(turnover)) out <- c(out, `Rotation annuelle (x)` = turnover)
+           `Daily VaR 95% (%)` = 100 * unname(var95),
+           `Daily CVaR 95% (%)` = 100 * -mean(r[r <= -var95]))
+  if (!is.null(turnover)) out <- c(out, `Annual turnover (x)` = turnover)
   out
 }
 
@@ -81,7 +81,7 @@ paired_block_bootstrap <- function(r1, r2, B = 2000, block = 20, seed = 1) {
     idx <- as.vector(sapply(starts, function(s) ((s - 1 + 0:(block - 1)) %% n) + 1))[1:n]
     stat(r1[idx], r2[idx])
   })
-  # On recentre la distribution bootstrap sous l’hypothèse d’égalité.
+  # Center the bootstrap distribution under the null of equality.
   p <- sapply(seq_along(obs), function(k) {
     cen <- boot[k, ] - mean(boot[k, ])
     mean(abs(cen) >= abs(obs[k]))

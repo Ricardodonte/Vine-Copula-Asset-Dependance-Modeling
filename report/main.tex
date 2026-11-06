@@ -17,21 +17,21 @@
 \usepackage{hyperref}
 \hypersetup{colorlinks=true, linkcolor=black, citecolor=black, urlcolor=blue}
 
-% Les passages corrigés ou ajoutés lors de la révision sont en rouge
+
 \newcommand{\corr}[1]{#1}
 \newenvironment{correction}{}{}
 
-\title{\textbf{Modélisation des dépendances extrêmes et optimisation de portefeuille multi-actifs}\\[1em]
-\large Une approche par Vine Copulas}
+\title{\textbf{Modeling Tail Dependence and Optimizing Multi-Asset Portfolios}\\[1em]
+\large A Vine Copula Approach}
 \author{\Large Ricardo DONTE}
-\date{January 16, 2026\\[0.3em]\corr{Version révisée : octobre 2026}\\[5em]
+\date{January 16, 2026\\[0.3em]Revised October 2026\\[5em]
 \textit{UM6P-Africa Business School}\\
 Master in Financial Engineering}
 
 \begin{document}
 \maketitle
 \thispagestyle{empty}
-
+\begin{center}\small The original report was written in French and translated into English by ChatGPT.\end{center}
 \vfill
 
 \newpage
@@ -41,31 +41,31 @@ Master in Financial Engineering}
 
 % =====================================================================================================
 \section{Introduction}
-\subsection{Motivation et problématique}
+\subsection{Motivation and Research Question}
 
-Dans un contexte financier caractérisé par l'apparition de nouvelles catégories d'actifs et une multiplication des crises systémiques, les limites essentielles de la gestion contemporaine du risque de portefeuille se révèlent. Les méthodes classiques de répartition, dérivées du modèle moyenne-variance de Markowitz, reposent sur l'hypothèse délicate de distributions gaussiennes et de corrélations linéaires entre les actifs. Cependant, cette perspective minimise considérablement les dangers des mouvements extrêmes conjoints, particulièrement quand la diversification est plus essentielle.
+New asset classes and recurring systemic crises have exposed limitations in conventional portfolio risk management. Classical allocation methods derived from Markowitz's mean--variance framework use linear correlations to describe dependence. A Gaussian model can understate the risk of joint extremes, particularly when diversification matters most.
 
-La complexité des marchés financiers est bien plus grande : lors de périodes de tension, les actifs qui devraient être décorrélés déclinent simultanément en raison de dépendances asymétriques révélées. L'incapacité des corrélations linéaires à saisir les dépendances de queue entraîne une surestimation périlleuse des avantages de la diversification. L'enjeu principal de ce travail est donc d'explorer des solutions à ces contraintes en suggérant un modèle qui peut représenter avec précision les dépendances extrêmes entre les actifs financiers.
+During market stress, assets that normally offer diversification can fall together as asymmetric dependencies emerge. Linear correlation gives limited information about such tail events and can overstate the benefits of diversification. This study examines how to model extreme dependence across financial assets.
 
-\subsection{Objectif, enjeu pratique et apport méthodologique}
+\subsection{Objectives and Methodology}
 
-Ce travail propose une démarche méthodologique qui allie les modèles ARMA-GARCH et les Vine Copulas pour faire face aux limites de l'approche Markowitz. Nous suivons une procédure similaire à \cite{evkaya2024}. Cette structure bidimensionnelle facilite la séparation de la modélisation des dynamiques marginales des actifs de la structure de dépendance multivariée, fournissant ainsi une illustration fidèle des probabilités de co-crashs. Le but de ce travail recherche est double : d'une part, elle cherche à établir une quantification précise des dépendances de queue entre quatre catégories d'actifs majeurs, incluant les actifs numériques (Bitcoin) dans une analyse comparative rigoureuse. Elle a pour objectif par la suite d'évaluer l'efficacité d'une stratégie de répartition qui prend en compte spécifiquement les risques extrêmes, à travers des indicateurs de performance adaptés au risque.
+We combine ARMA-GARCH models with vine copulas, following an approach similar to \cite{evkaya2024}. The pair-copula construction separates each asset's marginal dynamics from their joint dependence and allows us to study joint crashes. We first estimate tail dependence across four asset classes, including Bitcoin. We then evaluate allocation strategies that explicitly account for extreme risk using risk-adjusted performance measures.
 
-Notre analyse couvre quatre classes d'actifs représentatives des marchés globaux :
+The sample covers four assets:
 \begin{itemize}
-  \item SPY : Actions américaines (S\&P 500)
-  \item BTC-USD : Bitcoin, chef de file des crypto-monnaies
-  \item BND : ETF obligataire, celui du Vanguard Total Bond Market Index Fund (BND)
-  \item Gold.xau : Or, valeur refuge traditionnelle
+  \item SPY, US equities (S\&P 500).
+  \item BTC-USD, Bitcoin.
+  \item BND, the Vanguard Total Bond Market ETF.
+  \item Gold (XAU), a traditional safe-haven asset.
 \end{itemize}
-La période d'analyse, allant du 1er janvier 2016 au 3 novembre 2025, englobe sciemment les épisodes de crise majeurs qui ont jalonné cette décennie notamment la pandémie de COVID-19. Cette option offre la possibilité d'examiner la robustesse des diverses stratégies d'allocation en situation de crise.
-Les prix de SPY, BTC et BND proviennent de Yahoo Finance ( à travers le package \texttt{quantmod}) et celui de l'or de TradingView. Les séries sont alignées sur les jours où les quatre actifs cotent, ce qui donne 2,473 rendements quotidiens.
+The sample runs from January 1, 2016 to November 3, 2025 and includes the COVID-19 crisis. This period allows us to examine how the allocation strategies behave under stress.
+SPY, BTC, and BND prices come from Yahoo Finance via \texttt{quantmod}. Gold prices come from TradingView. Aligning the series on common trading dates yields 2,473 daily returns.
 
 % =====================================================================================================
-\section{Résultats de l'analyse}
-\subsection{Statistiques descriptives des Log-Rendements}
+\section{Descriptive Results}
+\subsection{Descriptive Statistics of Log Returns}
 
-L'analyse est basée sur les log-rendements quotidiens des quatre actifs. Le Tableau~\ref{tab:desc} présente les statistiques descriptives de ces séries de rendements.
+Table~\ref{tab:desc} summarizes the daily log returns of the four assets.
 
 \begin{table}[H]
 \centering
@@ -84,79 +84,79 @@ Q3 (75\%) & 0.0059  & 0.0204  & 0.0018  & 0.0055 \\
 Max       & 0.0999  & 0.2251  & 0.0413  & 0.0469 \\
 \bottomrule
 \end{tabular}
-\caption{Statistiques descriptives des actifs}
+\caption{Descriptive statistics by asset}
 \label{tab:desc}
 \end{table}
 
-\paragraph{Interprétation des Statistiques}
-L'analyse des log-rendements révèle des caractéristiques typiques des séries financières, notamment des queues épaisses et une asymétrie négative.
+\paragraph{Interpretation}
+The return series exhibit two common features of financial data: heavy tails and negative skewness.
 \begin{itemize}
-  \item Volatilité et Rendement (Moyenne et Écart-type) : Le Bitcoin affiche le rendement moyen le plus élevé, mais également, de loin, la plus grande volatilité, ce qui confirme son statut d'actif à haut risque et haut rendement. Les obligations américaines présentent la volatilité la plus faible et le rendement moyen le plus bas. Le SPY et l'Or (GOLD) ont des profils de volatilité et de rendement intermédiaires.
-  \item Asymétrie : Tous les actifs présentent une asymétrie négative, les pertes extrêmes sont plus fréquentes ou plus importantes que les gains extrêmes. Le BND a l'asymétrie la plus fortement négative, il a connu une chute brutale en mars 2020, due à la crise de liquidité du COVID-19, rendement minimum le 12 mars 2020.
-  \item Aplatissement : Tous les actifs présentent un coefficient d'aplatissement élevé (Kurtosis $\geq 3$), ce qui indique la présence de queues épaisses. Ceci est crucial car cela justifie l'utilisation de modèles sophistiqués, comme le GARCH avec des lois d'innovation Student-t ou GED, pour mieux capturer les événements extrêmes.
+  \item Volatility and mean return. Bitcoin has the highest average return and by far the highest volatility. BND has the lowest average return and volatility. SPY and gold fall between them.
+  \item Skewness. All four series are negatively skewed. BND has the strongest negative skewness, with its lowest return on March 12, 2020 during the COVID-19 liquidity crisis.
+  \item Kurtosis. All four series have high kurtosis ($\geq 3$), consistent with heavy tails. GARCH models with Student-t or GED innovations can accommodate heavier tails.
 \end{itemize}
-Ce profil de rendement caractérisé par une asymétrie négative et un kurtosis élevé accentue l'importance de l'étude : les méthodes "conventionnelles" basées sur la loi normale, qui tendent à minimiser la fréquence des extrêmes, seraient « inadaptées » pour modéliser les dépendances dans ce jeu de données.
+Negative skewness and high kurtosis motivate a model that can account for more frequent extremes than a Gaussian specification.
 
 % =====================================================================================================
-\section{Modélisation moyenne-variance des actifs}
+\section{Modeling Asset Returns and Volatility}
 
-Cette section vise à modéliser les dynamiques univariées des quatre instruments financiers (SPY, BTC, BND, GOLD) à l'aide des modèles de la classe ARMA-GARCH. Ce modèle, établi sur la période in-sample (du 01-01-2016 au 01-11-2019), permet d'obtenir des innovations standardisées qui seront ensuite converties en marges uniformes pour être appliquées dans l'étape de modélisation des Vine copules. Il est important de noter que la période in-sample est utilisée comme référence pour la sélection des paramètres des modèles que nous construirons par la suite.
+We model each asset with an ARMA-GARCH specification. The in-sample period, January 1, 2016 to November 1, 2019, provides a reference for model selection. The standardized innovations are transformed to uniform margins before fitting the vine copula.
 
-\subsection{Modélisation de la moyenne conditionnelle (Processus ARMA)}
+\subsection{Conditional Mean (ARMA)}
 
-La moyenne conditionnelle des log-rendements est modélisée par un processus ARMA(p,q) (AutoRegressive Moving Average). Ce processus permet de capturer les éventuelles autocorrélations dans la série de rendements, bien que pour les données financières quotidiennes, les ordres p et q soient souvent faibles.
+An ARMA($p,q$) process models the conditional mean of log returns. It can capture serial dependence, although low orders are often sufficient for daily financial returns.
 
-Un processus ARMA(p,q) s'écrit formellement :
+The ARMA($p,q$) process is
 \[
 r_t = \mu + \sum_{i=1}^{p} \phi_i r_{t-i} + \sum_{j=1}^{q} \theta_j \epsilon_{t-j} + \epsilon_t
 \]
-où :
+where
 \begin{itemize}
-  \item $r_t$ est le rendement logarithmique au temps $t$.
-  \item $\phi_i$ sont les coefficients autorégressifs (AR).
-  \item $\theta_j$ sont les coefficients moyennes mobiles (MA).
-  \item $\epsilon_t$ représente les innovations, ou le bruit blanc.
+  \item $r_t$ is the log return at time $t$.
+  \item $\phi_i$ are the autoregressive (AR) coefficients.
+  \item $\theta_j$ are the moving-average (MA) coefficients.
+  \item $\epsilon_t$ is the innovation.
 \end{itemize}
 
-\subsection{Modélisation de la variance conditionnelle (GARCH et EGARCH)}
+\subsection{Conditional Variance (GARCH and EGARCH)}
 
-Les séries de rendements financiers présentent typiquement des phénomènes de regroupement de volatilité (clustering). Pour modéliser la variance conditionnelle, l'approche GARCH (Generalized ARCH) est employée.
+Financial returns commonly exhibit volatility clustering. We use a GARCH-type model for the conditional variance.
 
-\paragraph{Modèle GARCH Standard}
-Le modèle GARCH(m,l) s'écrit :
+\paragraph{Standard GARCH}
+The GARCH($m,l$) model is
 \[
 \sigma_t^2 = \omega + \sum_{i=1}^{m} \alpha_i \epsilon_{t-i}^2 + \sum_{j=1}^{l} \beta_j \sigma_{t-j}^2
 \]
-avec $\epsilon_t = \sigma_t z_t$. Dans ce modèle, les paramètres ont les interprétations suivantes :
+where $\epsilon_t = \sigma_t z_t$. The parameters have the following interpretations.
 \begin{itemize}
-  \item $\omega > 0$ est la constante du modèle ; la variance inconditionnelle de long terme vaut $\omega / (1 - \sum \alpha_i - \sum \beta_j)$.
-  \item $\alpha_i \geq 0$ mesure l'impact des chocs passés (effets ARCH).
-  \item $\beta_j \geq 0$ mesure la persistance de la volatilité (effets GARCH).
-  \item La condition de stationnarité exige que $\sum \alpha_i + \sum \beta_j < 1$.
+  \item $\omega > 0$ is the constant. The long-run unconditional variance is $\omega / (1 - \sum \alpha_i - \sum \beta_j)$.
+  \item $\alpha_i \geq 0$ measures the impact of past shocks (ARCH effects).
+  \item $\beta_j \geq 0$ measures volatility persistence (GARCH effects).
+  \item Covariance stationarity requires $\sum \alpha_i + \sum \beta_j < 1$.
 \end{itemize}
-La limite majeure du modèle GARCH standard est qu'il suppose une réponse symétrique de la volatilité aux chocs positifs et négatifs. Or, il est couramment observé que les chocs négatifs (mauvaises nouvelles) ont un impact plus important sur la volatilité future que les chocs positifs (bonnes nouvelles) de même ampleur.
+Standard GARCH gives shocks of the same magnitude a symmetric effect on volatility. In financial data, negative shocks often have a larger effect on future volatility than equally large positive shocks.
 
-\paragraph{Modèle EGARCH (Exponential GARCH)}
-Afin de capturer l'effet de levier (asymétrie), le modèle EGARCH (Exponential GARCH, introduit par \corr{\cite{nelson1991}}) est utilisé. Il est mieux adapté aux séries financières et modélise le logarithme de la variance, garantissant que $\sigma_t^2$ reste positif.
+\paragraph{Exponential GARCH}
+We use the EGARCH model of \citet{nelson1991} to capture the leverage effect. Modeling the log variance ensures that $\sigma_t^2$ is positive.
 
-Le modèle EGARCH(m,l) s'écrit  :
+The EGARCH($m,l$) specification is
 
 \[
 \ln(\sigma_t^2) = \omega + \sum_{i=1}^{m} \big( \alpha_i z_{t-i} + \gamma_i (|z_{t-i}| - \mathbb{E}|z_{t-i}|) \big) + \sum_{j=1}^{l} \beta_j \ln(\sigma_{t-j}^2)
 \]
-où :
+where
 \begin{itemize}
-  \item $\beta_j$ mesure la mémoire de la volatilité.
-  \item $\alpha_i$ représente l'effet de signe (effet de levier) : $\alpha_i < 0$ et significatif signifie qu'un choc négatif augmente davantage la volatilité qu'un choc positif de même taille.
-  \item $\gamma_i$ mesure la réaction de la volatilité à la taille des chocs passés, indépendamment de leur signe.
+  \item $\beta_j$ measures volatility persistence.
+  \item $\alpha_i$ captures the sign effect. A significant negative $\alpha_i$ means that a negative shock increases volatility more than a positive shock of the same size.
+  \item $\gamma_i$ measures the response to the magnitude of past shocks, regardless of their sign.
 \end{itemize}
 
-\subsection{Résultats et Interprétation des Modèles ARMA-EGARCH}
+\subsection{ARMA-EGARCH Estimate Results}
 
-L'étape de modélisation univariée est réalisée en faisant un grid-search sur un ensemble de modèles ARMA-GARCH et ARMA-EGARCH avec différentes distributions pour l'innovation. Le modèle ARMA(p,q)-EGARCH(1,1) était toujours celui offrant le meilleur compromis entre AIC et BIC. Nous nous sommes aussi assuré de la stabilité des coefficients au cours du temps et du bon ajustement des modèles choisis aux données à travers des tests statistiques que nous ne présentons pas ici. Le choix de la loi Student-t est justifié par les fortes valeurs de kurtosis observées plus haut, confirmant la présence de queues épaisses dans les rendements.
-Nous rappelons que le modèle retenu est un ARMA(1,1) pour le SPY et un ARMA(0,0) avec constante pour les trois autres actifs.
+We compare ARMA-GARCH and ARMA-EGARCH specifications across several innovation distributions. ARMA($p,q$)--EGARCH(1,1) offers the best trade-off between AIC and BIC in this comparison. We also check parameter stability and model fit using statistical tests whose detailed results are omitted here. The high kurtosis of returns motivates the Student-t innovation distribution.
+We use ARMA(1,1) for SPY and a constant mean, ARMA(0,0), for the other three assets.
 
-Les résultats d'estimation pour les quatre actifs sont présentés ci-dessous, suivis d'une interprétation des paramètres clés.
+The tables give the estimates and residual diagnostics for each asset.
 
 \paragraph{SPY}
 \begin{table}[H]
@@ -179,10 +179,10 @@ Weighted Ljung--Box (Residuals$^2$) & 4.0820 & & & 0.5750 \\
 Weighted ARCH LM (Lag 7) & 2.3417 & & & 0.6452 \\
 \bottomrule
 \end{tabular}
-\caption{Résultats de l'estimation ARMA-EGARCH pour le SPY}
+\caption{ARMA-EGARCH estimates for SPY}
 \end{table}
-La forte valeur de $\beta_1$ (0.95) indique que la volatilité du marché actions est très persistante, ce qui est typique des séries financières. Le paramètre $\nu$ des degrés de liberté, égal à 4.7, est relativement faible, ce qui valide l'utilisation de la distribution Student-t pour modéliser les innovations et mieux capter la probabilité des événements extrêmes.
-Le coefficient $\alpha_1 = -0.19$ et significatif, traduit un effet de levier marqué : une baisse du marché augmente davantage la volatilité  qu'une hausse de même amplitude.
+The large $\beta_1$ (0.95) indicates persistent equity volatility. The relatively low degrees of freedom, $\nu=4.7$, support using Student-t innovations to capture extreme movements.
+The significant estimate $\alpha_1=-0.19$ indicates a leverage effect. A negative market shock raises volatility more than an equally large positive shock.
 
 \paragraph{BTC}
 \begin{table}[H]
@@ -203,12 +203,12 @@ Weighted Ljung--Box (Residuals$^2$) & 1.8473 & & & 0.9224 \\
 Weighted ARCH LM (Lag 7) & 1.6630 & & & 0.7881 \\
 \bottomrule
 \end{tabular}
-\caption{Résultats de l'estimation ARMA-EGARCH pour le BTC}
+\caption{ARMA-EGARCH estimates for Bitcoin}
 \end{table}
-La volatilité du Bitcoin est la plus persistante du portefeuille ($\beta_1 \sim 0.99$). Le résultat le plus marquant est le paramètre de forme $\nu$ très faible (2.17). Une si petite valeur signifie que les rendements du Bitcoin présentent des queues extrêmement épaisses, confirmant la fréquence élevée des mouvements extrêmes par rapport aux autres actifs, ce qui rend la modélisation des dépendances de queue absolument nécessaire.
-Nous trouvons juste de notifier quand même que le test de Ljung--Box rejette l'absence d'autocorrélation des résidus du BTC, une autocorrélation résiduelle faible subsiste donc dans la moyenne.
+Bitcoin has the most persistent volatility in the sample ($\beta_1 \sim 0.99$). Its shape parameter is particularly low ($\nu=2.17$), indicating very heavy tails relative to the other assets and motivating the analysis of tail dependence.
+The Ljung--Box test rejects the absence of serial correlation in Bitcoin residuals, so some dependence remains in the conditional mean.
 
-\paragraph{BOND}
+\paragraph{BND}
 \begin{table}[H]
 \centering
 \begin{tabular}{lrrrr}
@@ -227,9 +227,9 @@ Weighted Ljung--Box (Residuals$^2$) & 5.5780 & & & 0.3496 \\
 Weighted ARCH LM (Lag 7) & 2.6513 & & & 0.5817 \\
 \bottomrule
 \end{tabular}
-\caption{Résultats de l'estimation ARMA-EGARCH pour le BOND}
+\caption{ARMA-EGARCH estimates for BND}
 \end{table}
-Bien que la volatilité soit hautement persistante ($\beta_1 \sim 0.98$), ce qui signifie que les ajustements sont lents, le paramètre $\nu$ est relativement élevé (10.78) par rapport aux autres actifs. Cela indique que, bien que les rendements obligataires ne soient pas parfaitement Gaussiens, ils sont ceux qui s'approchent le plus d'une distribution normale parmi les quatre actifs, avec une probabilité plus faible de subir des chocs extrêmes fréquents.
+BND volatility is highly persistent ($\beta_1 \sim 0.98$). Its degrees of freedom ($\nu=10.78$) are the highest of the four assets, so its fitted innovations are the closest to Gaussian.
 
 \paragraph{Gold}
 \begin{table}[H]
@@ -250,95 +250,96 @@ Weighted Ljung--Box (Residuals$^2$) & 2.5040 & & & 0.8372 \\
 Weighted ARCH LM (Lag 7) & 0.5878 & & & 0.9698 \\
 \bottomrule
 \end{tabular}
-\caption{Résultats de l'estimation ARMA-EGARCH pour le GOLD}
+\caption{ARMA-EGARCH estimates for gold}
 \end{table}
-Le modèle EGARCH pour l'Or confirme l'extrême persistance de sa volatilité ($\beta_1 \sim 0.98$). Le paramètre $\nu$ (6.20) indique la présence de queues épaisses, ce qui est plus prononcé que pour le BND, mais moins que pour le SPY et le BTC.
-Contrairement aux actions, dont le marché est représenté ici par le SPY,  l'effet de signe est positif ($\alpha_1 = 0.04$) : les hausses du prix de l'or augmentent davantage sa volatilité que les baisses, un comportement typique des actifs refuges.
+Gold volatility is also highly persistent ($\beta_1 \sim 0.98$). Its degrees of freedom ($\nu=6.20$) imply heavier innovation tails than BND and lighter tails than SPY or Bitcoin.
+The sign effect for gold is positive ($\alpha_1=0.04$). An increase in the gold price raises its volatility more than a decline of the same size.
 
-La modélisation ARMA-EGARCH avec innovations Student-t est jugée appropriée pour l'ensemble des actifs, car les tests de Ljung--Box et ARCH LM sur les résidus et les carrés des résidus ne rejettent généralement pas l'hypothèse de bruit blanc. Ces modèles ont permis de standardiser les résidus, qui sont désormais «~dé-autocorrélés~» et sans tendance en moyenne et en variance, préparant l'entrée pour la modélisation de dépendance multivariée. Ces innovations traduisent les chocs structurels.
+The Ljung--Box and ARCH LM diagnostics on the residuals and squared residuals generally support the chosen specifications, with the Bitcoin mean exception noted above. We use the standardized residuals as inputs for the multivariate dependence model.
 
-\subsection{Copules et vine copules}
+\subsection{Copulas and Vine Copulas}
 
-Après avoir réalisé une modélisation univariée qui a abouti à des résidus standardisés et sans autocorrélation, la prochaine phase nécessite de modéliser la structure de dépendance conjointe multivariée. Cette phase est essentielle puisqu'elle permet de saisir les dépendances non linéaires et de queue, élémentaires pour l'optimisation du portefeuille en période de tension.
+After fitting the marginal dynamics, we model the dependence among the standardized innovations. This allows us to examine nonlinear dependence and joint extremes relevant to portfolio risk.
 
-\subsubsection{Cadre théorique des Copules}
-La théorie des copules, formalisée par \corr{\cite{sklar1959}}, fournit un outil puissant pour séparer les fonctions de répartition marginales des variables aléatoires de leur structure de dépendance jointe.
+\subsubsection{Copula Framework}
+Copula theory, formalized by \citet{sklar1959}, separates the marginal distributions of random variables from their joint dependence.
 
-\subsubsection{Définition de Sklar}
-Pour une distribution jointe $F_{X_1,\dots,X_n}$ avec des fonctions de répartition marginales $F_{X_i}$, il existe une copule $C$ telle que :
+\subsubsection{Sklar's Theorem}
+For a joint distribution $F_{X_1,\dots,X_n}$ with marginal distributions $F_{X_i}$, there is a copula $C$ such that
 \[
 F_{X_1,\dots,X_n}(x_1,\dots,x_n) = C\big(F_{X_1}(x_1),\dots,F_{X_n}(x_n)\big)
 \]
-L'estimation des marges individuelles (via ARMA-EGARCH et la fonction de répartition de la loi de Student standardisée) permet d'obtenir les marges uniformes $U_i = F_{X_i}(x_i)$ qui sont ensuite utilisées comme entrées pour l'estimation de la copule $C$.
+We estimate each ARMA-EGARCH margin and apply the standardized Student-t distribution function. The resulting uniform observations $U_i=F_{X_i}(x_i)$ are the inputs to the copula.
 
-\subsubsection{Le choix des Vine Copulas}
-Quand la dimension $d$ dépasse 2, les copules multivariées traditionnelles, telles que la copule Gaussienne ou Student-t, perdent leur flexibilité. Elles ont du mal à modéliser les dépendances multiples entre les différents sous-groupes de variables.
+\subsubsection{Why Use Vine Copulas?}
+In dimensions above two, a single Gaussian or Student-t copula offers limited flexibility for representing distinct patterns of dependence across subsets of assets.
 
-Ici, la méthode choisie consiste à utiliser les Vine Copulas, une technique flexible qui décompose la copule multivariée en un ensemble de copules bivariées conditionnelles \citep{bedford2002, aas2009}. Cette méthode repose sur une structure de vignes successives.
+A vine copula decomposes a multivariate copula into a sequence of conditional bivariate copulas arranged in trees \citep{bedford2002, aas2009}.
 
-La densité d'une copule multivariée $c(u_1,\dots,u_d)$ est ainsi décomposée hiérarchiquement :
+The multivariate copula density $c(u_1,\dots,u_d)$ is decomposed as follows:
 \[
 c(u_1,\dots,u_d) = \prod_{m=1}^{d-1} \prod_{e \in E_m} c_{j_e,k_e|D_e}(\cdot)
 \]
 
-\subsubsection{Types de Vine Copulas}
-Il existe plusieurs structures d'arbres pour organiser cette décomposition :
+\subsubsection{Vine Structures}
+The decomposition can use several tree structures.
 \begin{itemize}
-  \item C-vine : Un n\oe{}ud central relie tous les autres n\oe{}uds à chaque niveau.
-  \item D-vine : La structure suit un ordre séquentiel en chaîne, où le conditionnement est toujours basé sur la variable immédiatement précédente.
-  \item R-vine : C'est la structure générale et la plus flexible, permettant une organisation arbitraire des paires de copules.
+  \item C-vine. At each level, a central node connects to all other nodes.
+  \item D-vine. The nodes are arranged in a chain.
+  \item R-vine. The general structure allows a more flexible arrangement of pair copulas, subject to the vine constraints.
 \end{itemize}
-Le choix de la structure (C-vine, D-vine, etc.) dépend de la variable centrale ou de l'ordre de conditionnement jugé le plus pertinent pour les données.
-Dans ce travail, la structure est sélectionnée par l'algorithme séquentiel de \cite{dissmann2013} (fonction \texttt{RVineStructureSelect} du package \texttt{VineCopula}, \cite{vinecopula}) : il s'agit donc d'une R-vine, dont chaque arbre relie en priorité les paires les plus dépendantes au sens du $\tau$ de Kendall.
+The choice of structure depends on the central variables or the ordering best suited to the data.
+We select an R-vine using the sequential algorithm of \citet{dissmann2013}, implemented by \texttt{RVineStructureSelect} in \texttt{VineCopula} \citep{vinecopula}. The tree selection prioritizes pairs with stronger dependence as measured by the absolute value of Kendall's $\tau$.
 
-\subsection{Familles de Copules Bivariées Utilisées}
-Une vaste sélection de copules bivariées est employée pour illustrer les paires de dépendance, connues sous le nom d'edges, dans la structure de Vine. Le choix de la famille la plus adéquate pour chaque paire (avec ou sans condition) est réalisé en se basant sur des critères statistiques (AIC/BIC).
+\subsection{Bivariate Copula Families}
+Each edge of the vine is modeled by a bivariate copula, with or without conditioning. Information criteria such as AIC and BIC can guide the selection of a family.
 
-Le tableau ci-dessous présente les familles de copules bivariées employées dans cette étude, incluant (mais sans s'y limiter) :
+The table lists the base families available for estimation.
 
 \begin{table}[H]
 \centering
 \small
 \begin{tabular}{llp{8cm}}
 \toprule
-Code & Copule & Caractéristiques principales \\
+Code & Copula & Main characteristics \\
 \midrule
-0 & Indépendance & Aucune dépendance entre les variables ; $C(u,v) = uv$. Référence de base. \\
-1 & Gaussienne & Dépendance symétrique, sans dépendance de queue. Corrélée via $\rho$. \\
-2 & Student-$t$ & Dépendance symétrique avec corrélation $\rho$ et $\nu$ degrés de liberté. Capture les queues conjointes. \\
-3 & Clayton & Dépendance forte dans la \textbf{queue gauche}. Paramètre $\theta > 0$. \\
-4 & Gumbel & Dépendance forte dans la \textbf{queue droite}. Paramètre $\theta \geq 1$ \\
-5 & Frank & Dépendance modérée, symétrique, sans queue privilégiée. Paramètre $\theta \neq 0$. Adaptée aux dépendances faibles. \\
-6 & Joe & Dépendance dans la \textbf{queue droite} (encore plus prononcée que Gumbel) \\
-7 & BB1 (Clayton--Gumbel) & Combine queues gauche (Clayton) et droite (Gumbel). Deux paramètres $(\theta, \delta)$. \\
-8 & BB6 (Joe--Gumbel) & Queue droite très forte ; dépendance asymétrique. Deux paramètres $(\theta, \delta)$. \\
-9 & BB7 (Joe--Clayton) & Combine Joe (droite) et Clayton (gauche). Permet dépendance bilatérale. \\
-10 & BB8 (Joe--Frank) & Combine Joe (forte droite) et Frank (symétrique). Deux paramètres \\
+0 & Independence & No dependence between the variables. $C(u,v)=uv$. \\
+1 & Gaussian & Symmetric dependence with correlation $\rho$ and no tail dependence. \\
+2 & Student-$t$ & Symmetric tail dependence with correlation $\rho$ and $\nu$ degrees of freedom. \\
+3 & Clayton & Lower-tail dependence. Parameter $\theta>0$. \\
+4 & Gumbel & Upper-tail dependence. Parameter $\theta\geq1$. \\
+5 & Frank & Symmetric dependence with no tail dependence. Parameter $\theta\neq0$. \\
+6 & Joe & Upper-tail dependence. \\
+7 & BB1 (Clayton--Gumbel) & Lower- and upper-tail dependence. Parameters $(\theta,\delta)$. \\
+8 & BB6 (Joe--Gumbel) & Asymmetric dependence with upper-tail dependence. Parameters $(\theta,\delta)$. \\
+9 & BB7 (Joe--Clayton) & Can model dependence in both tails. Parameters $(\theta,\delta)$. \\
+10 & BB8 (Joe--Frank) & Combines Joe and Frank features. Two parameters. \\
 \bottomrule
 \end{tabular}
-\caption{Copules utilisées pour l'estimation}
+\caption{Copula families used for estimation}
 \end{table}
 
-La sélection inclut également les rotations à 90°, 180° et 270° des copules Clayton, Gumbel, Joe, BB1, BB6, BB7 et BB8. Selon la rotation, ces copules permettent de représenter une dépendance négative asymétrique ou de déplacer la dépendance vers la queue opposée à celle de la copule de départ. Pour chaque paire, un test d'indépendance est effectué au seuil de 5\% avant de choisir la famille. Si le test ne rejette pas l'hypothèse d'indépendance, la copule d'indépendance (I) est retenue.
+We also allow 90, 180, and 270 degree rotations of Clayton, Gumbel, Joe, BB1, BB6, BB7, and BB8. Depending on the rotation, these families can model asymmetric negative dependence or move dependence to the opposite tail. Each pair is tested for independence at the 5\% level before selecting a family. If the test does not reject independence, the independence copula (I) is retained.
 
-\subsection{Résultats de l'estimation pour les périodes étudiées}
+\subsection{Estimate Results by Period}
 
-L'estimation des paramètres des Vine Copulas (ici une structure R-vine) permet de quantifier le degré et la nature asymétrique des dépendances pour chaque paire d'actifs. Nous analysons trois périodes clés qui illustrent la transformation structurelle des marchés financiers.
-Pour chaque paire d'actifs du premier arbre, nous comparons le $\tau$ de Kendall calculé à partir des résidus standardisés à celui donné par la copule estimée. Comme la transformation en uniformes conserve le rang des observations, elle laisse le $\tau$ empirique inchangé. Celui-ci sert donc de référence pour vérifier si la copule retrouve le niveau de dépendance observé dans les données.
+The fitted R-vine measures the strength and asymmetry of dependence for each asset pair. We study three periods that capture changes in financial market conditions.
+For each pair in the first tree, we compare Kendall's $\tau$ calculated from the standardized residuals with the value implied by the fitted copula. The transformation to uniforms preserves the ranks and leaves the empirical $\tau$ unchanged. It therefore provides a benchmark for checking the fitted dependence.
 
-\paragraph{Période 1 : Estimation In-sample (01-01-2016 au 01-11-2019})\label{sec:p1}
-Cette période sert de référence, caractérisée par une croissance économique stable et une volatilité relativement faible.
+\paragraph{Period 1. In-sample estimation (January 2016 to November 2019)}\label{sec:p1}
+This period provides a reference, with stable economic growth and relatively low volatility.
 
-Les résultats de cette période dressent un tableau d'interdépendances relativement classiques et mesurées.
+The estimates show mostly moderate dependence.
 \begin{itemize}
-  \item SPY-BND (Actions et Obligations) : L'estimation révèle une dépendance négative modérée ($\tau = -0.14$) avec une copule Student-t symétrique. Ce résultat confirme le rôle traditionnel des obligations comme couverture asymétrique pour le marché des actions. Cependant, la faible dépendance de queue (LTD et UTD = 0,01) suggère que, malgré la présence de queues épaisses, les probabilités de co-mouvements extrêmes simultanés (co-crashs) sont faibles à ce stade.
-  \item GOLD-BND (Actifs Refuges) : Une dépendance positive forte ($\tau = 0.33$) est observée. Cette relation positive entre l'or et le marché obligataire est classique pour cette période, reflétant souvent la dynamique des taux d'intérêt réels.
-  \item BTC-GOLD (Crypto vs. Refuge) : Le test d'indépendance n'est pas rejeté et la copule d'indépendance est retenue; avec le $\tau$ empirique de 0.04. Ce qui est crucial est que, durant la période 2016-2019, le Bitcoin n'agit pas encore comme une valeur refuge alternative. Aucune dépendance de queue n'est détectée.
-  \item Intégration du BTC : Les dépendances conditionnelles confirment que, pour cette période, le Bitcoin reste largement indépendant des actifs traditionnels.
+  \item SPY--BND (equities and bonds). A symmetric Student-t copula gives moderate negative dependence ($\tau=-0.14$), consistent with the hedging role of bonds. Both tail dependence coefficients are low (0.01), indicating little evidence of joint extremes in this period.
+  \item GOLD--BND (safe havens). The pair exhibits positive dependence ($\tau=0.33$), consistent with both assets being sensitive to real interest rates.
+  \item BTC--GOLD. The independence copula is selected, with empirical $\tau=0.04$ and no detected tail dependence. Bitcoin does not behave as an alternative safe haven in this period.
+  \item Conditional relationships also suggest that Bitcoin was largely independent of traditional assets.
 \end{itemize}
 
 \begin{table}[H]
 \centering
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{clcrrrrrr}
 \toprule
 Tree & Edge & Family & par1 & par2 & $\tau$ & $\tau$ emp. & UTD & LTD \\
@@ -352,17 +353,18 @@ Tree & Edge & Family & par1 & par2 & $\tau$ & $\tau$ emp. & UTD & LTD \\
 \bottomrule
 \multicolumn{9}{l}{\footnotesize Type = R-vine, UTD = upper tail dependence, LTD = lower tail dependence} \\
 \multicolumn{9}{l}{\footnotesize LogLik = 170.6, AIC = $-333.2$, BIC = $-313.7$} \\
-\end{tabular}
-\caption{Résultats de l'estimation de la Vine Copula sur la période pré COVID}
+\end{tabular}}
+\caption{Pre-COVID R-vine estimates}
 \end{table}
 
-En résumé, la période in-sample est caractérisée par une dépendance modérée, des relations de couverture stables, et une intégration très limitée des crypto-actifs.
+The in-sample period is characterized by moderate dependence, stable hedging relationships, and limited integration of crypto-assets.
 
-\paragraph{Période 2 : Crise du COVID-19 (01-01-2020 au 01-01-2022)}
-Cette période représente un choc systémique sans précédent qui a remis en question les fondamentaux de la diversification. Pour faire bref, les marchés ont basculé vers des dépendances asymétriques.
+\paragraph{Period 2. COVID-19 crisis (January 2020 to January 2022)}
+The COVID-19 crisis disrupted traditional diversification relationships and introduced asymmetric dependence.
 
 \begin{table}[H]
 \centering
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{clcrrrrrr}
 \toprule
 Tree & Edge & Family & par1 & par2 & $\tau$ & $\tau$ emp. & UTD & LTD \\
@@ -376,25 +378,25 @@ Tree & Edge & Family & par1 & par2 & $\tau$ & $\tau$ emp. & UTD & LTD \\
 \bottomrule
 \multicolumn{9}{l}{\footnotesize Type = R-vine, C = Clayton, F = Frank, UTD = upper tail dependence, LTD = lower tail dependence} \\
 \multicolumn{9}{l}{\footnotesize LogLik = 74.1, AIC = $-136.1$, BIC = $-110.8$} \\
-\end{tabular}
-\caption{Résultats de l'estimation de la Vine Copula sur la période du COVID}
+\end{tabular}}
+\caption{R-vine estimates during the COVID-19 crisis}
 \end{table}
 
-La crise du COVID-19 a entraîné un changement structurel des dépendances: 
+The main changes during the crisis were as follows.
 \begin{itemize}
-  \item BTC-SPY (Intégration du Bitcoin) : La dépendance devient positive mais reste faible ($\tau = 0.13$, $\tau$ empirique de 0.16). Cette dépendance est charactérisée par une copule de Clayton, c'est-à-dire concentrée dans la queue inférieure.
+  \item BTC--SPY. Dependence becomes positive but remains weak ($\tau=0.13$, empirical $\tau=0.16$). The Clayton copula concentrates dependence in the lower tail.
   \begin{itemize}
-    \item LTD : Le coefficient LTD passe de zéro à 0.09. Cela indique une probabilité plus élevée de co-crashs conjoints entre Bitcoin et les actions par rapport à la période pré-2020.
-    \item UTD: Le coefficient de dépendance en queue supérieure (UTD) est nul. La dépendance entre le Bitcoin et les actions se manifeste donc surtout lors des fortes baisses. Ce résultat suggère que le Bitcoin commence à se comporter comme un actif risqué en période de stress, même si son intégration à cette classe d'actifs reste "partielle".
+    \item LTD rises from zero to 0.09, suggesting a higher likelihood of joint extreme declines than before 2020.
+    \item UTD is zero. Dependence between Bitcoin and equities is concentrated in sharp declines. This suggests that Bitcoin begins to behave like a risky asset in stress periods, with only partial integration into that asset class.
   \end{itemize}
-  \item BND-GOLD (Refuges Sous Tension) : La dépendance moyenne diminue légèrement $\tau$ de 0.33 à 0.22), mais la copule Student-t à faible degré de liberté ($\nu = 4.65$) porte la dépendance de queue de 0.07 à 0.15 : les co-mouvements extrêmes doublent. Les deux actifs «~refuges~» traditionnels maintiennent leur corrélation positive, mais dans un contexte de volatilité et de fréquence des extrêmes accrues. L'émergence d'une demande de liquidité globale a fait monter la dépendance de queue entre les actifs refuges, signalant une peur systémique.
-  \item GOLD-BTC : La dépendance reste faible ($\tau = 0.09$, $\tau$ empirique de 0.085). La copule BB7 retenue attribue presque toute la dépendance à la queue supérieure (UTD = 0.10, LTD = 0.00) : l'Or et le Bitcoin montent parfois ensemble, mais ne chutent pas ensemble. Le Bitcoin ne joue donc pas le rôle de refuge, sans pour autant être lié à l'or de façon marquée.
-  \item Changement de Structure Conditionnelle : La relation entre l'Or et les actions (GOLD, SPY) n'est plus déterminée par le marché obligataire (BND) comme c'était le cas pré-2020, mais devient indépendante de celui-ci. La dépendance conditionnelle entre BND et SPY devient légèrement négative ($\tau = -0.08$, copule de Frank).
+  \item BND--GOLD. Kendall's $\tau$ declines from 0.33 to 0.22, but the Student-t copula with $\nu=4.65$ raises tail dependence from 0.07 to 0.15. The two safe havens remain positively dependent, while the rise in joint extremes is consistent with a broad demand for liquidity during the crisis.
+  \item GOLD--BTC. Dependence remains weak ($\tau=0.09$, empirical $\tau=0.085$). The selected BB7 copula puts almost all tail dependence in the upper tail (UTD = 0.10, LTD = 0.00). The evidence for a strong link between Bitcoin and gold remains limited.
+  \item Conditional structure. GOLD and SPY are conditionally independent given BTC in the second tree. In the third tree, BND and SPY show slightly negative dependence conditional on GOLD and BTC ($\tau=-0.08$, Frank).
 \end{itemize}
-Durant la crise du COVID-19, la dépendance de queue entre les actifs refuges s'est renforcée. L'analyse des copules montre également l'apparition d'un risque modéré de fortes baisses simultanées du Bitcoin et des actions.
+During the COVID-19 crisis, tail dependence between the safe-haven assets increased. The estimates also show the emergence of a moderate risk of joint extreme declines in Bitcoin and equities.
 
-\subsection{Période 3 : Post-crise du COVID}\label{sec:p3}
-Cette période d'estimation succède aux chocs immédiats de la crise du COVID-19 et couvre la période où les marchés ont commencé à intégrer les nouvelles dynamiques monétaires et géopolitiques.
+\subsection{Period 3. Post-COVID}\label{sec:p3}
+This period follows the immediate COVID-19 shocks and covers the adjustment to new monetary and geopolitical conditions.
 
 \begin{table}[H]
 \centering
@@ -412,143 +414,143 @@ Tree & Edge & Family & par1 & par2 & $\tau$ & $\tau$ emp. & UTD & LTD \\
 \multicolumn{9}{l}{\footnotesize Type = R-vine, UTD = upper tail dependence, LTD = lower tail dependence} \\
 \multicolumn{9}{l}{\footnotesize LogLik = 193.8, AIC = $-375.7$, BIC = $-346.5$} \\
 \end{tabular}
-\caption{Résultats de l'estimation de la Vine Copula sur la période post-COVID}
+\caption{Post-COVID R-vine estimates}
 \end{table}
 
-Les résultats de la période post-COVID-19 révèlent une stabilisation de la dépendance, décrite par des copules Student-t symétriques pour les paires impliquant les obligations et par une copule BB1 asymétrique pour la paire SPY-BTC, avec une intensification générale des niveaux de dépendance par rapport à la période in-sample.
+Post-COVID dependence stabilizes. Pairs involving bonds are fitted with symmetric Student-t copulas, while SPY--BTC is fitted with an asymmetric BB1 copula. Dependence generally strengthens relative to the in-sample period.
 \begin{itemize}
-  \item SPY-BTC (Intensification de l'intégration) : La copule de Clayton qui caractérisait la dépendance en période de crise est remplacée par une copule BB1, qui possède à la fois une queue inférieure (LTD = 0.12) et une queue supérieure (UTD = 0.17). La dépendance entre les deux marchés s'est nettement intensifiée ($\tau$ passant de 0.13 à 0.24, $\tau$ empirique de 0.26).
+  \item SPY--BTC. The BB1 copula replaces Clayton and exhibits both lower-tail dependence (LTD = 0.12) and upper-tail dependence (UTD = 0.17). Kendall's $\tau$ rises from 0.13 to 0.24, with an empirical $\tau$ of 0.26.
   \begin{itemize}
-    \item Le Bitcoin a définitivement perdu son statut d'actif non corrélé des marchés traditionnels, confirmant son intégration dans la classe des actifs «~risqués~» traditionnels.
-    \item Le risque de co-crash (LTD = 0.12) se maintient au niveau observé pendant la crise, et la probabilité de co-hausse extrême (UTD = 0.17) apparaît.
+    \item Bitcoin becomes more closely linked to traditional markets, consistent with its growing integration among risky assets.
+    \item The risk of joint extreme declines remains moderate, and upper-tail dependence emerges.
   \end{itemize}
-  \item BND-SPY (Changement structurel) : Le marché obligataire et le marché des actions maintiennent une dépendance dans les queues modérée (UTD = LTD = 0.12), le $\tau$ de Kendall étant positif (0.14). Ce résultat indique un changement structurel fondamental du système financier. La relation est redevenue primaire, mais est «~fondamentalement changée~», souvent en raison de la pression inflationniste et du changement de politique monétaire post-crise, qui affecte négativement la capacité des obligations à servir de couverture efficace.
-  \item GOLD-BND : La relation entre l'Or et les Obligations est maintenue ($\tau = 0.24$), mais on observe des «~queues beaucoup moins longues » (dépendance de queue de 0.10 contre 0.15 pendant la crise). Cela signifie que, bien que la dépendance persiste, la diminution de la fréquence des extrêmes simultanés se traduit par une diminution de la probabilité de crash conjoint durant cette période.
-  \item Dépendances conditionnelles (GOLD, SPY | BND) : On note un retour à la situation pré-COVID pour certaines relations conditionnelles. Le lien entre le marché de l'or et le marché des actions (SPY) est à nouveau «~totalement~» déterminé par le marché obligataire (BND) (copule d'indépendance conditionnellement à BND).
+  \item BND--SPY. Tail dependence is moderate (UTD = LTD = 0.12) and Kendall's $\tau$ is positive (0.14). This shift is consistent with weaker bond hedging during a period of inflation and monetary policy tightening.
+  \item GOLD--BND. Dependence persists ($\tau=0.24$), but tail dependence drops to 0.10 from 0.15 during the crisis. Joint extremes are less pronounced.
+  \item Conditional dependence. The fitted copula for GOLD and SPY conditional on BND is again the independence copula, as in the pre-COVID period.
 \end{itemize}
 
-En synthèse, la période post-crise est celle de la normalisation dans un nouveau régime de risque. Le Bitcoin est désormais un actif intégré qui contribue au risque systémique, et le rôle de refuge traditionnel du marché obligataire est affaibli, même si la dépendance de queue a retrouvé une symétrie relative.
+The post-crisis period shows more integration of Bitcoin with equities and a weaker hedging role for bonds, while some tail relationships become more symmetric.
 
 % =====================================================================================================
-\subsection{Analyse dynamique des résultats}\label{sec:dyn}
+\subsection{Rolling Dependence Analysis}\label{sec:dyn}
 
-\paragraph{Méthode.} Nous estimons les dépendances sur des fenêtres de 252 jours de bourse, décalées de cinq séances. L'objectif est de décrire rétrospectivement l'évolution des dépendances entre les actifs. Les marges ARMA-EGARCH sont donc estimées une seule fois sur l'ensemble de l'échantillon. Ce choix évite aussi de réestimer un EGARCH-t sur seulement 252 séances, une fenêtre trop courte pour obtenir des paramètres stables. Les résidus standardisés sont ensuite transformés en uniformes à l'aide de la fonction de répartition de la loi de Student standardisée. Pour chaque paire d'actifs, nous effectuons d'abord un test d'indépendance au seuil de 5\%. Si l'hypothèse d'indépendance est rejetée, la copule est choisie selon le critère AIC parmi les familles du tableau 6 et leurs rotations. Dans le cas contraire, la copule d'indépendance est retenue et les coefficients \ensuremath{\tau}, LTD et UTD valent zéro. Chaque point des figures est placé à la date de fin de sa fenêtre. Les premières estimations de 2020 peuvent ainsi inclure des séances de 2019, ce qui permet de représenter le krach de mars 2020. Dans la version initiale, la première fenêtre entièrement comprise dans la période COVID se terminait en 2021.
+\paragraph{Method.} We estimate dependence on rolling windows of 252 trading days, advancing five sessions at a time. This is a retrospective analysis, so we estimate the ARMA-EGARCH margins once over the full sample. This also avoids fitting an EGARCH-t on only 252 observations. Standardized residuals are transformed using the standardized Student-t distribution. For each pair we first test independence at 5\%. If independence is rejected, we select a family by AIC from the families in Table 6 and their rotations. Otherwise, the independence copula is selected and $\tau$, LTD, and UTD are zero. Each plotted point is dated at the end of its window. Early 2020 estimates can therefore include 2019 observations, allowing the figures to show the March 2020 crash. In the initial analysis, the first window entirely within the COVID-19 period ended in 2021.
 
-\paragraph{Analyse dynamique des dépendances pré-COVID (2017-2019)}
-L'analyse des copules bivariées statiques de la section précédente fournit une moyenne sur la période, mais les graphiques d'évolution du $\tau$ de Kendall, de la dépendance de queue inférieure (LTD) et de la dépendance de queue supérieure (UTD) révèlent la dynamique de l'intégration des actifs.
+\paragraph{Pre-COVID rolling dependence (2017--2019)}
+The preceding estimates summarize entire periods. The rolling curves show how Kendall's $\tau$, lower-tail dependence (LTD), and upper-tail dependence (UTD) change within each period.
 
-Le graphique d'évolution du tau de Kendall illustre la dépendance moyenne au fil du temps.
+Kendall's $\tau$ tracks overall dependence over time.
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/rapport_pre_tau.png}
-\caption{Évolution de la dépendance ($\tau$ de Kendall) pré-COVID}
+\includegraphics[width=0.85\textwidth]{figures/report_pre_tau.png}
+\caption{Rolling Kendall's $\tau$ before COVID-19}
 \end{figure}
 \begin{itemize}
-  \item GOLD-BND : La dépendance moyenne entre l'Or et les Obligations est nettement positive ($\tau \geq 0.4$) en 2017, puis elle décroît jusqu'à un minimum autour de 0.12 entre fin 2018 et début 2019, avant de remonter autour de 0.4 fin 2019. Cette forte dépendance positive est conforme à l'observation de la corrélation forte entre l'or et le marché obligataire durant cette période de faibles taux d'intérêt.
-  \item SPY-BND : La dépendance est constamment négative ($\tau$ oscille entre 0 et $-0.23$). Cela confirme le rôle traditionnel de couverture négative des obligations par rapport aux actions (SPY). On observe une stabilisation de cette corrélation négative à partir de 2018.
-  \item BTC-GOLD : La dépendance du Bitcoin avec l'or est quasi nulle sur toute la période (entre $-0.08$ et 0.14), l'indépendance n'étant le plus souvent pas rejetée. Elle redevient faiblement positive fin 2019 ($\tau \approx 0.10$). L'absence de dépendance révèle son statut d'actif encore décorrélé des marchés durant la majeure partie de cette période.
+  \item GOLD--BND. Kendall's $\tau$ is above 0.4 in 2017, falls to roughly 0.12 between late 2018 and early 2019, then rises to around 0.4 by the end of 2019. The positive association is consistent with the behavior of gold and bonds under low interest rates.
+  \item SPY--BND. Dependence remains nonpositive, with $\tau$ between 0 and $-0.23$. The negative relationship stabilizes from 2018, consistent with bonds hedging equities.
+  \item BTC--GOLD. Dependence stays near zero ($-0.08$ to 0.14), and the independence test usually does not reject. The relationship becomes weakly positive at the end of 2019 ($\tau\approx0.10$).
 \end{itemize}
 
-Le graphique d'évolution de la LTD capture la probabilité de co-crashs (mouvements extrêmes conjoints à la baisse).
+The LTD curve tracks dependence in joint extreme declines.
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/rapport_pre_LTD.png}
-\caption{Évolution de la LTD pré-COVID}
+\includegraphics[width=0.85\textwidth]{figures/report_pre_LTD.png}
+\caption{Rolling lower-tail dependence before COVID-19}
 \end{figure}
 \begin{itemize}
-  \item GOLD-BND : La LTD entre l'Or et les Obligations est nulle dans 92\,\% des fenêtres, avec quelques pointes autour de 0.2 à 0.3 en 2018-2019 et un pic à 0.52 en novembre 2019. Cela indique que, bien que ces actifs soient considérés comme des refuges, ils affichent parfois une forte probabilité de baisse simultanée lors de chocs spécifiques au marché obligataire ou de fuite vers la liquidité.
-  \item BTC-GOLD : La LTD du Bitcoin avec l'Or est nulle sur toute la période : aucune tendance aux co-crashs n'est détectée.
-  \item SPY-BND : La LTD entre les actions et les obligations reste faible (toujours sous 0,05). Cela confirme que les obligations remplissent leur rôle de couverture contre les risques extrêmes d'actions avant le COVID-19.
+  \item GOLD--BND. LTD is zero in 92\% of windows, with occasional values around 0.2 to 0.3 in 2018--2019 and a peak of 0.52 in November 2019. The two safe havens can experience sharp joint declines during some bond market or liquidity shocks.
+  \item BTC--GOLD. LTD is zero throughout the period.
+  \item SPY--BND. LTD remains below 0.05, consistent with bonds providing some protection against extreme equity losses before COVID-19.
 \end{itemize}
 
-Le graphique d'évolution de l'UTD capture la probabilité de co-booms (mouvements extrêmes conjoints à la hausse).
+The UTD curve tracks dependence in joint extreme gains.
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/rapport_pre_UTD.png}
-\caption{Évolution de l'UTD pré-COVID}
+\includegraphics[width=0.85\textwidth]{figures/report_pre_UTD.png}
+\caption{Rolling upper-tail dependence before COVID-19}
 \end{figure}
 \begin{itemize}
-  \item GOLD-BND : L'UTD est extrêmement élevée au début de la période (autour de 0,5 à 0,55) et chute significativement après 2018. Une UTD élevée signifie une forte propension à une hausse conjointe des deux actifs refuges, probablement alimentée par la recherche de sécurité ou la gestion des taux par la banque centrale.
-  \item BTC-GOLD : L'UTD reste faible, avec un pic à 0.15 à l'été 2017, et elle est nulle dans 74\,\% des fenêtres. Cette faiblesse reflète la nature spéculative du Bitcoin, dont les phases de hausse restent largement déconnectées de celles de l'or.
-  \item SPY-BND : L'UTD entre les actions et les obligations reste très faible, souvent proche de zéro.
+  \item GOLD--BND. UTD is around 0.5 to 0.55 early in the period and falls substantially after 2018. Early joint gains may reflect demand for safety or changing expectations about monetary policy.
+  \item BTC--GOLD. UTD is zero in 74\% of windows and peaks at 0.15 in summer 2017. Extreme gains in Bitcoin and gold remain largely separate.
+  \item SPY--BND. UTD is low and often close to zero.
 \end{itemize}
 
-\paragraph{Analyse dynamique des dépendances pendant la COVID-19}
-L'analyse des graphiques d'évolution pour la période de la crise du COVID-19 met en lumière la rupture structurelle des dépendances et l'échec momentané des stratégies de diversification traditionnelles. Le graphique d'évolution de la dépendance moyenne montre l'intensité de la corrélation globale entre les actifs durant 2020 et 2021.
+\paragraph{Rolling dependence during COVID-19}
+The rolling results show how diversification relationships changed in 2020 and 2021.
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/rapport_cov_tau.png}
-\caption{Évolution de la dépendance ($\tau$ de Kendall) durant la crise COVID-19}
+\includegraphics[width=0.85\textwidth]{figures/report_cov_tau.png}
+\caption{Rolling Kendall's $\tau$ during COVID-19}
 \end{figure}
 \begin{itemize}
-  \item SPY-BTC : La dépendance moyenne reste nulle au premier semestre 2020, puis devient positive à partir de l'été 2020 et se stabilise entre 0.10 et 0.17 en 2021. Ceci confirme l'intégration progressive du Bitcoin (BTC) dans le panier d'actifs risqués (SPY), en accord avec le $\tau$ statique de 0,13.
-  \item BTC-GOLD : La dépendance moyenne est la plus volatile. Elle culmine autour de 0,23 début 2021, illustrant une corrélation modérée entre l'Or et le Bitcoin au début de la phase de reprise (souvent liée à la liquidité ou aux craintes inflationnistes). Cependant, cette dépendance s'effondre au second semestre 2021, atteignant presque zéro. Cette chute reflète un découplage soudain et radical entre les flux de l'Or (réagissant aux taux réels) et ceux du Bitcoin.
-  \item GOLD-BND :  La dépendance moyenne des actifs refuges traditionnels est forte au début de la crise ($\tau \approx 0.44$ au premier semestre 2020), puis elle baisse jusqu'à environ 0.15 en 2021. Malgré la stabilité relative en moyenne, les extrêmes montrent une réalité différente.
+  \item SPY--BTC. Kendall's $\tau$ is zero in the first half of 2020, turns positive from summer 2020, and ranges from 0.10 to 0.17 in 2021. This is consistent with Bitcoin's increasing association with equities and the full-period estimate of 0.13.
+  \item BTC--GOLD. Dependence peaks near 0.23 in early 2021 and drops to near zero in the second half of 2021. Bitcoin and gold became less closely linked after the early recovery.
+  \item GOLD--BND. Kendall's $\tau$ starts near 0.44 in the first half of 2020 and falls to around 0.15 in 2021.
 \end{itemize}
 
-Le graphique de la LTD révèle l'augmentation du risque de co-crash.
+The LTD curves show how the risk of joint extreme losses evolved.
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/rapport_cov_LTD.png}
-\caption{Évolution de la LTD durant la crise COVID-19}
+\includegraphics[width=0.85\textwidth]{figures/report_cov_LTD.png}
+\caption{Rolling lower-tail dependence during COVID-19}
 \end{figure}
 \begin{itemize}
-  \item SPY-BTC : La LTD entre les actions et le Bitcoin, nulle jusqu'à l'été 2020, devient positive ensuite et oscille entre 0,03 et 0,12 (maximum en mars 2021). Ces valeurs confirment que la probabilité de co-crashs est plus élevée par rapport à la période pré-2020 (où elle était nulle), en accord avec la copule de Clayton de l'estimation statique. On y voit la preuve que le Bitcoin commence à devenir une source de risque systémique durant les périodes de stress.
-  \item GOLD-BND : La LTD de cette paire est la plus persistante, bondissant à 0,29 dès mars 2020 et restant au-dessus de 0,20 jusqu'à l'automne 2020, avant de redescendre vers 0,10 en 2021. Ceci est critique : cela montre que même les actifs considérés comme des refuges traditionnels affichent une dépendance persistante et élevée aux co-crashs durant la crise. Cela reflète l'effet de «~fuite vers le cash~» généralisé, où tous les actifs sont vendus simultanément.
-  \item BTC-GOLD : La LTD est la plus intermittente, présentant des pics isolés (jusqu'à 0,08 en mars 2020) mais restant nulle dans 84\,\% des fenêtres. Ceci correspond à l'estimation statique d'une LTD nulle pour la copule BB7, indiquant que si le Bitcoin et l'Or peuvent chuter ensemble, ce n'est pas un phénomène structurel de la crise, mais plutôt lié à des liquidations spécifiques.
+  \item SPY--BTC. LTD is zero until summer 2020, then ranges from 0.03 to 0.12, peaking in March 2021. This is consistent with the Clayton copula selected for the full crisis period.
+  \item GOLD--BND. LTD reaches 0.29 in March 2020, stays above 0.20 until autumn 2020, and falls toward 0.10 in 2021. The rise in joint declines among safe-haven assets is consistent with a broad move toward cash.
+  \item BTC--GOLD. LTD peaks at 0.08 in March 2020 but is zero in 84\% of windows. Joint extreme declines appear episodic, consistent with the zero LTD of the fitted BB7 copula.
 \end{itemize}
 
-Le graphique de l'UTD illustre la tendance à la hausse coordonnée, révélatrice des flux spéculatifs.
+The UTD curves track joint extreme gains during the crisis.
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/rapport_cov_UTD.png}
-\caption{Évolution de l'UTD durant la crise COVID-19}
+\includegraphics[width=0.85\textwidth]{figures/report_cov_UTD.png}
+\caption{Rolling upper-tail dependence during COVID-19}
 \end{figure}
 \begin{itemize}
-  \item BTC-GOLD : L'UTD est la plus élevée, atteignant 0,21 en mars 2021. Ces chiffres confirment une probabilité modérée de hausse conjointe entre le Bitcoin et l'Or (UTD statique de 0,10). L'interprétation est que les investisseurs perçoivent par moments le BTC comme une «~valeur refuge ou anti-inflation~» en période de hausse, renforçant la dépendance positive avec l'Or dans les extrêmes supérieurs.
-  \item SPY-BTC : L'UTD est quasi nulle (nulle dans 96\,\% des fenêtres, maximum de 0,03). La crise n'a pas produit de co-hausses extrêmes entre actions et Bitcoin : leur dépendance de crise se concentre dans la queue inférieure.
-  \item GOLD-BND : L'UTD reste la plus modérée et stable, autour de 0,18 en 2020 puis entre 0,05 et 0,10 en 2021 (maximum de 0,29 en mars 2020).
+  \item BTC--GOLD. UTD peaks at 0.21 in March 2021, compared with a full-period estimate of 0.10. Joint gains may reflect periods when investors treated Bitcoin as a hedge against inflation.
+  \item SPY--BTC. UTD is zero in 96\% of windows and peaks at 0.03. Crisis dependence is concentrated in the lower tail.
+  \item GOLD--BND. UTD is around 0.18 in 2020, with a maximum of 0.29 in March, and ranges from 0.05 to 0.10 in 2021.
 \end{itemize}
-L'analyse dynamique montre que la dépendance en queue inférieure entre l'or et les obligations (GOLD--BND) s'est nettement renforcée pendant la crise du COVID-19. On observe également l'apparition d'un risque modéré de fortes baisses simultanées du Bitcoin et des actions (SPY--BTC). Les hausses extrêmes conjointes entre le Bitcoin, les actions et l'or restent toutefois limitées.
+Lower-tail dependence between gold and bonds strengthened during the COVID-19 crisis. Bitcoin and equities also showed a moderate risk of joint sharp declines. Joint extreme gains among Bitcoin, equities, and gold remained limited.
 
-\paragraph{Analyse dynamique des dépendances post-COVID-19}
-La période post-COVID-19 (couvrant 2022 à fin 2025) révèle la stabilisation des dépendances dans un nouveau régime de marché, caractérisé par une inflation persistante et des changements de politique monétaire.
+\paragraph{Post-COVID rolling dependence}
+From 2022 through 2025, dependence stabilized under a new market regime characterized by persistent inflation and shifts in monetary policy.
 
-Le graphique d'évolution de la dépendance montre que les dépendances sont devenues plus stables et symétriques, bien que généralement plus élevées que durant la période pré-COVID.
+Dependence became more stable and symmetric, and generally stronger than before COVID-19.
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/rapport_post_tau.png}
-\caption{Évolution de la dépendance (Tau de Kendall) Post-COVID-19}
+\includegraphics[width=0.85\textwidth]{figures/report_post_tau.png}
+\caption{Rolling Kendall's $\tau$ after COVID-19}
 \end{figure}
 \begin{itemize}
-  \item SPY-BTC : La dépendance moyenne entre le Bitcoin et le S\&P 500 est structurellement élevée. Elle oscille entre 0,08 et 0,39, entre 0,20 et 0,34 en moyenne semestrielle en 2022-2023, un creux autour de 0,10 au premier semestre 2024, puis une remontée vers 0,25 en 2025. Ce niveau élevé confirme l'intensification et la permanence de la dépendance positive entre les deux marchés. Le Bitcoin est définitivement intégré comme un actif «~risqué~» de marché.
-  \item GOLD-BND : La dépendance entre l'Or et les obligations, qui était très forte par moments avant 2019, montre une tendance générale à la baisse depuis 2024. Elle passe d'environ 0,35 fin 2023 à une stabilisation autour de 0,13 en 2025. Cette diminution du $\tau$ suggère une normalisation de la relation Or/Obligations dans ce nouveau contexte, mais elle est beaucoup plus faible que lors des phases d'optimisme pré-COVID.
-  \item BND-SPY : La dépendance entre les obligations et les actions est principalement positive et oscille entre 0.10 et 0,25 à partir de 2023 (elle est encore nulle au premier semestre 2022). C'est un changement majeur par rapport à la dépendance négative stable observée pré-COVID. Ce résultat dynamique renforce l'idée d'un changement structurel fondamental du système financier, où les obligations peinent à jouer leur rôle de couverture en raison des pressions inflationnistes.
-\end{itemize}
-
-Le graphique de l'UTD montre la probabilité de co-booms dans la période post-crise.
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{figures/rapport_post_UTD.png}
-\caption{Évolution de l'UTD post-COVID-19}
-\end{figure}
-\begin{itemize}
-  \item SPY-BTC : L'UTD est nulle dans 95\,\% des fenêtres ; elle n'apparaît qu'à la fin de 2025 (jusqu'à 0,29). 
-  \item BND-SPY : L'UTD entre les obligations et les actions devient modérée à partir de 2023, autour de 0,10 à 0,20 (maximum de 0,33 fin 2024) : actions et obligations montent désormais ensemble lors des détente de taux.
-  \item GOLD-BND : L'UTD de l'Or et des Obligations est également plus faible après 2024, tendant vers 0,10-0,20, mais présente des pics (jusqu'à 0,40 début 2024).
+  \item SPY--BTC. Kendall's $\tau$ ranges from 0.08 to 0.39. Six-month averages range from 0.20 to 0.34 in 2022--2023, dip to about 0.10 in the first half of 2024, and recover to around 0.25 in 2025. The positive relationship indicates stronger integration of Bitcoin with equities.
+  \item GOLD--BND. Dependence has generally declined since 2024, from around 0.35 at the end of 2023 to 0.13 in 2025, below the stronger levels observed before COVID-19.
+  \item BND--SPY. Dependence is still near zero in early 2022, then is predominantly positive, ranging from 0.10 to 0.25 from 2023. The shift from stable negative dependence before COVID-19 is consistent with weaker bond hedging under inflationary pressure.
 \end{itemize}
 
-La figure suivante présente l'évolution temporelle de la LTD sur la période post-COVID (2022-2025).
+The UTD curves show how joint extreme gains evolve after the crisis.
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/rapport_post_LTD.png}
-\caption{Évolution de la LTD post-COVID-19}
+\includegraphics[width=0.85\textwidth]{figures/report_post_UTD.png}
+\caption{Rolling upper-tail dependence after COVID-19}
 \end{figure}
 \begin{itemize}
-  \item BND-SPY : La paire BND-SPY montre une LTD en hausse progressive, de presque zéro en 2022 à 0,07-0,16 en 2024-2025. Cette relation présente une faible dépendance en queue inférieure, mais qui se renforce. On note quand même un pic notable en octobre 2025 (0,22), indiquant des périodes où obligations et actions ont chuté simultanément, possiblement lors de craintes inflationnistes ou de resserrement monétaire.
-  \item La paire GOLD-BND exhibe une LTD modérée et assez persistante (entre 0.05 et 0.18 en moyenne semestrielle, nulle dans seulement 19\,\% des fenêtres), avec un pic de 0.26 en novembre 2023.
-  \item La paire SPY-BTC présente une LTD le plus souvent nulle (81\,\% des fenêtres). Le pic le plus élevé (0.28) date de mai 2022, lors de l'effondrement de l'écosystème Terra-Luna. La LTD réapparaît ensuite au second semestre 2024 (autour de 0.07) mais reste proche de zéro en 2025.
-  \item  La «~maturisation~» du Bitcoin, qui se comporte de plus en plus comme un actif risqué corrélé aux actions, se lit dans son $\tau$ (0.25 en 2025) plutôt que dans ses co-crashs. Elle s'explique notamment par l'approbation d'ETF Bitcoin et l'intégration dans des portefeuilles institutionnels.
+  \item SPY--BTC. UTD is zero in 95\% of windows and rises to 0.29 in late 2025.
+  \item BND--SPY. UTD becomes moderate from 2023, generally ranging from 0.10 to 0.20, with a maximum of 0.33 in late 2024. Equities and bonds can rally together as rates ease.
+  \item GOLD--BND. UTD weakens after 2024 toward 0.10--0.20, with an earlier peak of 0.40 in early 2024.
+\end{itemize}
+
+The final figure shows rolling lower-tail dependence from 2022 to 2025.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/report_post_LTD.png}
+\caption{Rolling lower-tail dependence after COVID-19}
+\end{figure}
+\begin{itemize}
+  \item BND--SPY. LTD rises from near zero in 2022 to around 0.07--0.16 in 2024--2025, with a peak of 0.22 in October 2025. These episodes reflect joint equity and bond declines, possibly during inflation or monetary tightening shocks.
+  \item GOLD--BND. LTD is moderate and persistent, with six-month averages of 0.05--0.18. It is zero in only 19\% of windows and reaches 0.26 in November 2023.
+  \item SPY--BTC. LTD is zero in 81\% of windows. It peaks at 0.28 in May 2022 during the Terra-Luna collapse, reappears around 0.07 in the second half of 2024, and stays near zero in 2025.
+  \item Bitcoin's increasing integration is clearer in Kendall's $\tau$ (around 0.25 in 2025) than in the frequency of joint crashes. The introduction of spot Bitcoin ETFs and institutional portfolio adoption may help explain this change.
 \end{itemize}
 
 % =====================================================================================================

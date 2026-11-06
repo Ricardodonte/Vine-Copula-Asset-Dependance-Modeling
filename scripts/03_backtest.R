@@ -46,9 +46,9 @@ one_week <- function(k) {
 
   H <- R[max(1, t0 - W_HIST):(t0 - 1), ]
   w <- list(
-    `Équipondéré (1/N)` = ew,
-    `MinVar historique` = min_var_weights(cov(H)),
-    `MinCVaR historique` = min_cvar_weights(H))
+    `Equal weight (1/N)` = ew,
+    `Historical MinVar` = min_var_weights(cov(H)),
+    `Historical MinCVaR` = min_cvar_weights(H))
   for (s in SEEDS) {
     set.seed(s * 100000 + k)
     Uc <- RVineSim(N_SIM, v_corr)
@@ -57,8 +57,8 @@ one_week <- function(k) {
     if (s == 1) w[["MinVar R-vine ARMA-EGARCH"]] <- min_var_weights(cov(Sc))
     set.seed(s * 200000 + k)
     Ug <- simulate_gauss(N_SIM, Rho)
-    w[[paste0("MinCVaR copule gaussienne #", s)]] <- min_cvar_weights(scenarios_from_uniforms(Ug, m$fits, "correct"))
-    # On mesure le bruit de simulation sur les 500 premiers scénarios.
+    w[[paste0("Gaussian copula MinCVaR #", s)]] <- min_cvar_weights(scenarios_from_uniforms(Ug, m$fits, "correct"))
+    # Use the first 500 scenarios to measure Monte Carlo variation.
     w[[paste0("MinCVaR R-vine ARMA-EGARCH 500 sims #", s)]] <- min_cvar_weights(Sc[seq_len(N_SIM_SMALL), ])
   }
 
@@ -80,11 +80,11 @@ one_week <- function(k) {
                  var975 = -m_p + s_p * qnorm(0.975),
                  es975 = -m_p + s_p * dnorm(qnorm(0.975)) / 0.025)
     risk[[length(risk) + 1]] <- rbind(
-      data.frame(t = t, modele = "R-vine ARMA-EGARCH", t(risk_from_sims(pc))),
-      data.frame(t = t, modele = "EGARCH + copule gaussienne", t(risk_from_sims(pg))),
-      data.frame(t = t, modele = "EGARCH + indépendance", t(risk_from_sims(pi))),
-      data.frame(t = t, modele = "Simulation historique (252 j)", t(risk_from_sims(hs))),
-      data.frame(t = t, modele = "Variance-covariance normale (252 j)", t(gaus_vc)))
+      data.frame(t = t, model = "R-vine ARMA-EGARCH", t(risk_from_sims(pc))),
+      data.frame(t = t, model = "EGARCH + Gaussian copula", t(risk_from_sims(pg))),
+      data.frame(t = t, model = "EGARCH + independence", t(risk_from_sims(pi))),
+      data.frame(t = t, model = "Historical simulation (252 days)", t(risk_from_sims(hs))),
+      data.frame(t = t, model = "Normal variance-covariance (252 days)", t(gaus_vc)))
   }
   fam <- v_corr$family[lower.tri(v_corr$family)]
   list(k = k, t0 = t0, weights = w, risk = do.call(rbind, risk), families = family_label(fam),
@@ -106,10 +106,10 @@ if (use_cache) {
   weeks <- mclapply(seq_along(rebal_idx), function(k) {
     tryCatch(one_week(k), error = function(e) list(k = k, error = conditionMessage(e)))
   }, mc.cores = if (.Platform$OS.type == "windows") 1 else max(1, detectCores()), mc.preschedule = FALSE)
-  cat("Durée :", format(Sys.time() - t_start), "\n")
+  cat("Elapsed:", format(Sys.time() - t_start), "\n")
 }
 errs <- Filter(function(x) !is.null(x$error), weeks)
-if (length(errs)) { cat(length(errs), "semaines en erreur\n"); print(head(sapply(errs, `[[`, "error"))) }
+if (length(errs)) { cat(length(errs), "weekly fits failed\n"); print(head(sapply(errs, `[[`, "error"))) }
 stopifnot(length(errs) == 0)
 if (!use_cache) saveRDS(weeks, cache_file)
 
@@ -133,7 +133,7 @@ run_strategy <- function(name) {
     w_cur <- w
   }
   years <- length(ret) / 252
-  # La rotation exclut l'achat initial.
+  # Annual turnover excludes the initial purchase.
   list(ret = ret, t = tt, turnover = (turn - 1) / years)
 }
 paths <- lapply(setNames(strategies, strategies), run_strategy)
@@ -149,70 +149,70 @@ main_tab <- do.call(rbind, lapply(unique(grp), function(g) {
   colMeans(rows)
 }))
 rownames(main_tab) <- unique(grp)
-write_table(round(main_tab, 3), "07_performance_strategies", digits = 3)
+write_table(round(main_tab, 3), "07_strategy_performance", digits = 3)
 
 mc_tab <- do.call(rbind, lapply(unique(grp[grepl("#", rownames(perf))]), function(g) {
   rows <- perf[grp == g, , drop = FALSE]
-  data.frame(Stratégie = g,
+  data.frame(Strategy = g,
              `Sharpe min` = min(rows[, "Sharpe"]), `Sharpe max` = max(rows[, "Sharpe"]),
-             `Rendement total min (%)` = min(rows[, "Rendement total (%)"]),
-             `Rendement total max (%)` = max(rows[, "Rendement total (%)"]),
+             `Min total return (%)` = min(rows[, "Total return (%)"]),
+             `Max total return (%)` = max(rows[, "Total return (%)"]),
              `Max DD min (%)` = min(rows[, "Max drawdown (%)"]), `Max DD max (%)` = max(rows[, "Max drawdown (%)"]),
              check.names = FALSE)
 }))
-write_table(mc_tab, "08_bruit_monte_carlo", digits = 3)
+write_table(mc_tab, "08_monte_carlo_variation", digits = 3)
 
-# Les comparaisons par bootstrap utilisent les stratégies de la première graine.
+# Bootstrap comparisons use the first random seed.
 ref <- "MinCVaR R-vine ARMA-EGARCH #1"
-comparisons <- c("Équipondéré (1/N)", "MinVar historique", "MinCVaR historique", "MinVar R-vine ARMA-EGARCH",
-                 "MinCVaR copule gaussienne #1")
+comparisons <- c("Equal weight (1/N)", "Historical MinVar", "Historical MinCVaR", "MinVar R-vine ARMA-EGARCH",
+                 "Gaussian copula MinCVaR #1")
 tests <- do.call(rbind, lapply(comparisons, function(cn) {
   bt <- paired_block_bootstrap(paths[[ref]]$ret, paths[[cn]]$ret)
-  data.frame(Comparaison = paste(sub(" #1", "", ref), "vs", sub(" #1", "", cn)),
-             `Δ Sharpe` = bt$diff[1], `p Sharpe` = bt$p_value[1],
-             `Δ CVaR 95 % jour` = 100 * bt$diff[2], `p CVaR` = bt$p_value[2],
-             `Δ Max DD (pts)` = 100 * bt$diff[3], `p Max DD` = bt$p_value[3], check.names = FALSE)
+  data.frame(Comparison = paste(sub(" #1", "", ref), "vs", sub(" #1", "", cn)),
+             `Sharpe difference` = bt$diff[1], `p Sharpe` = bt$p_value[1],
+             `Daily 95% CVaR difference` = 100 * bt$diff[2], `p CVaR` = bt$p_value[2],
+             `Max drawdown difference (pp)` = 100 * bt$diff[3], `p Max DD` = bt$p_value[3], check.names = FALSE)
 }))
-write_table(tests, "09_tests_significativite", digits = 3)
+write_table(tests, "09_significance_tests", digits = 3)
 
-show <- c("Équipondéré (1/N)", "MinVar historique", "MinCVaR historique", "MinVar R-vine ARMA-EGARCH",
-          "MinCVaR R-vine ARMA-EGARCH #1", "MinCVaR copule gaussienne #1")
-cum <- do.call(rbind, lapply(show, function(s) data.frame(date = oos_dates, strategie = sub(" #1", "", s),
-                                                         richesse = cumprod(1 + paths[[s]]$ret))))
-g <- ggplot(cum, aes(date, richesse, colour = strategie)) + geom_line(linewidth = 0.5) +
-  labs(title = "Richesse cumulée hors échantillon (coûts de 10 pb inclus)", x = NULL, y = "Valeur de 1 investi",
+show <- c("Equal weight (1/N)", "Historical MinVar", "Historical MinCVaR", "MinVar R-vine ARMA-EGARCH",
+          "MinCVaR R-vine ARMA-EGARCH #1", "Gaussian copula MinCVaR #1")
+cum <- do.call(rbind, lapply(show, function(s) data.frame(date = oos_dates, strategy = sub(" #1", "", s),
+                                                         wealth = cumprod(1 + paths[[s]]$ret))))
+g <- ggplot(cum, aes(date, wealth, colour = strategy)) + geom_line(linewidth = 0.5) +
+  labs(title = "Out-of-sample cumulative wealth (10 bps trading cost)", x = NULL, y = "Value of 1 invested",
        colour = NULL) + theme_minimal(base_size = 11) + theme(legend.position = "bottom") +
   guides(colour = guide_legend(ncol = 2))
-ggsave(file.path(OUT_FIG, "03_richesse_cumulee.png"), g, width = 10, height = 6, dpi = 150)
+ggsave(file.path(OUT_FIG, "03_cumulative_wealth.png"), g, width = 10, height = 6, dpi = 150)
 
-base <- cumprod(1 + paths[["MinVar historique"]]$ret)
-rel <- do.call(rbind, lapply(setdiff(show, c("MinVar historique", "Équipondéré (1/N)")), function(s)
-  data.frame(date = oos_dates, strategie = sub(" #1", "", s),
-             ecart = 100 * (cumprod(1 + paths[[s]]$ret) / base - 1))))
-g <- ggplot(rel, aes(date, ecart, colour = strategie)) + geom_hline(yintercept = 0, colour = "grey50") +
+base <- cumprod(1 + paths[["Historical MinVar"]]$ret)
+rel <- do.call(rbind, lapply(setdiff(show, c("Historical MinVar", "Equal weight (1/N)")), function(s)
+  data.frame(date = oos_dates, strategy = sub(" #1", "", s),
+             difference = 100 * (cumprod(1 + paths[[s]]$ret) / base - 1))))
+g <- ggplot(rel, aes(date, difference, colour = strategy)) + geom_hline(yintercept = 0, colour = "grey50") +
   geom_line(linewidth = 0.5) +
-  labs(title = "Performance relative à MinVar historique (%), hors 1/N", x = NULL, y = "%", colour = NULL) +
+  labs(title = "Performance relative to historical MinVar (%), excluding 1/N", x = NULL, y = "%", colour = NULL) +
   theme_minimal(base_size = 11) + theme(legend.position = "bottom") + guides(colour = guide_legend(ncol = 2))
-ggsave(file.path(OUT_FIG, "04_performance_relative.png"), g, width = 10, height = 6, dpi = 150)
+ggsave(file.path(OUT_FIG, "04_relative_performance.png"), g, width = 10, height = 6, dpi = 150)
 
-wdf <- do.call(rbind, lapply(c("MinCVaR R-vine ARMA-EGARCH #1", "MinCVaR historique"),
+wdf <- do.call(rbind, lapply(c("MinCVaR R-vine ARMA-EGARCH #1", "Historical MinCVaR"),
   function(s) do.call(rbind, lapply(weeks, function(wk) data.frame(
-    date = dates[wk$t0], strategie = sub(" #1", "", s), actif = colnames(R), poids = wk$weights[[s]])))))
-g <- ggplot(wdf, aes(date, poids, fill = actif)) + geom_area() + facet_wrap(~strategie, ncol = 1) +
-  labs(title = "Poids hebdomadaires", x = NULL, y = NULL, fill = NULL) + theme_minimal(base_size = 11)
-ggsave(file.path(OUT_FIG, "05_poids.png"), g, width = 10, height = 8, dpi = 150)
+    date = dates[wk$t0], strategy = sub(" #1", "", s), asset = colnames(R), weight = wk$weights[[s]])))))
+g <- ggplot(wdf, aes(date, weight, fill = asset)) + geom_area() + facet_wrap(~strategy, ncol = 1) +
+  labs(title = "Weekly portfolio weights", x = NULL, y = NULL, fill = NULL) + theme_minimal(base_size = 11)
+ggsave(file.path(OUT_FIG, "05_weights.png"), g, width = 10, height = 8, dpi = 150)
 
-avg_w <- do.call(rbind, lapply(c("MinVar historique", "MinCVaR historique", "MinVar R-vine ARMA-EGARCH",
-                                 "MinCVaR R-vine ARMA-EGARCH #1", "MinCVaR copule gaussienne #1"), function(s)
+avg_w <- do.call(rbind, lapply(c("Historical MinVar", "Historical MinCVaR", "MinVar R-vine ARMA-EGARCH",
+                                 "MinCVaR R-vine ARMA-EGARCH #1", "Gaussian copula MinCVaR #1"), function(s)
   colMeans(do.call(rbind, lapply(weeks, function(wk) wk$weights[[s]])))))
-rownames(avg_w) <- sub(" #1", "", c("MinVar historique", "MinCVaR historique", "MinVar R-vine ARMA-EGARCH",
-                                    "MinCVaR R-vine ARMA-EGARCH #1", "MinCVaR copule gaussienne #1"))
+rownames(avg_w) <- sub(" #1", "", c("Historical MinVar", "Historical MinCVaR", "MinVar R-vine ARMA-EGARCH",
+                                    "MinCVaR R-vine ARMA-EGARCH #1", "Gaussian copula MinCVaR #1"))
 colnames(avg_w) <- colnames(R)
-write_table(round(100 * avg_w, 1), "10_poids_moyens_pct", digits = 1)
+write_table(round(100 * avg_w, 1), "10_average_weights_pct", digits = 1)
 
 fam_share <- table(unlist(lapply(weeks, `[[`, "families")))
-write_table(as.data.frame(sort(fam_share, decreasing = TRUE)), "11_familles_choisies_backtest", digits = 0)
-cat("Part des semaines avec au moins une copule tournée :",
+write_table(as.data.frame(sort(fam_share, decreasing = TRUE)), "11_backtest_copula_families", digits = 0)
+cat("Share of weeks with at least one rotated copula:",
     mean(sapply(weeks, `[[`, "n_rot") > 0), "\n")
 
 saveRDS(do.call(rbind, lapply(weeks, `[[`, "risk")), file.path(OUT_CACHE, "risk_forecasts.rds"))
