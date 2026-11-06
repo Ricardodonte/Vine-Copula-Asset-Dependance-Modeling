@@ -2,7 +2,7 @@
 
 This study models tail dependence among SPY, Bitcoin, BND, and gold with ARMA-EGARCH margins and an R-vine copula. The out-of-sample backtests compare portfolio allocation strategies and evaluate Value at Risk (VaR) and Expected Shortfall (ES) forecasts.
 
-[Read the report](report/report.pdf)
+[English report](report/report.pdf) | [Original French report](report/report-fr.pdf)
 
 ## Repository structure
 
