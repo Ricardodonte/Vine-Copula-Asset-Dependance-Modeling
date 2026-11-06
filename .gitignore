@@ -1,0 +1,14 @@
+/data/*.csv
+/results/
+/.Rhistory
+/.RData
+/.Rproj.user/
+/report/*.aux
+/report/*.fdb_latexmk
+/report/*.fls
+/report/*.log
+/report/*.out
+/report/*.synctex.gz
+/report/*.toc
+/report/*.xdv
+/report/main.pdf

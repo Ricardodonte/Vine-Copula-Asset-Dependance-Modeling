@@ -1,0 +1,171 @@
+\section{Résultats empiriques de l'optimisation de portefeuille}\label{sec:portefeuille}
+\begin{correction}
+
+Nous comparons six stratégies d'allocation entre novembre 2019 et novembre 2025. Deux stratégies minimisent la variance ou la CVaR à partir des rendements historiques. Deux autres utilisent des scénarios simulés avec le modèle R-vine ARMA-EGARCH. Nous ajoutons le portefeuille équipondéré (1/N) et une stratégie de minimisation de la CVaR qui associe les mêmes marges ARMA-EGARCH à une copule gaussienne. Les portefeuilles sont constitués sans vente à découvert, avec un poids maximal de 50\,\% par actif. Le taux sans risque est fixé à 2\,\%.
+
+\subsection{Protocole du backtest}
+
+Les portefeuilles sont rééquilibrés tous les cinq jours de bourse, soit 302 dates du 4 novembre 2019 au 3 novembre 2025. À chaque date, les marges ARMA-EGARCH à innovations Student standardisées sont estimées avec \texttt{rugarch} sur au plus 1\,000 rendements quotidiens antérieurs. La copule est ajustée sur les 504 dernières pseudo-observations. Les scénarios de rendement du lendemain sont obtenus par
+\[
+r_{i,t+1} = \hat\mu_{i,t+1} + \hat\sigma_{i,t+1}\,(F^{\mathrm{std}}_{\nu_i})^{-1}(U_i),
+\]
+où \(U_i\) est la composante simulée pour l'actif \(i\).
+
+Nous utilisons 10\,000 scénarios par tirage et cinq graines pour les stratégies de CVaR simulées. Le minimum de variance simulé est calculé avec le premier tirage. Pour la CVaR à 95\,\%, nous utilisons la formulation de \citet{rockafellar2000}. Les stratégies historiques reposent sur les 252 derniers rendements observés. Les coûts de transaction sont de 10 points de base par unité de rotation et les poids évoluent avec les prix entre deux rééquilibrages.
+
+\subsection{Performance comparée des stratégies}
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+Stratégie & Rend. total & Rend. ann. & Vol. ann. & Sharpe & Sortino & Max DD & Calmar & CVaR jour & Rotation \\
+ & (\%) & (\%) & (\%) & & & (\%) & & 95\,\% (\%) & /an \\
+\midrule
+Équipondéré (1/N) & 278,09 & 24,89 & 19,25 & 1,189 & 1,705 & -34,70 & 0,717 & 2,68 & 1,4 \\
+MinVar historique & 55,73 & 7,68 & 8,61 & 0,660 & 0,920 & -16,66 & 0,461 & 1,23 & 0,8 \\
+MinCVaR historique & 54,59 & 7,55 & 8,66 & 0,641 & 0,891 & -17,04 & 0,443 & 1,24 & 1,1 \\
+MinVar R-vine ARMA-EGARCH & 65,90 & 8,83 & 8,19 & 0,834 & 1,172 & -15,62 & 0,565 & 1,16 & 6,3 \\
+MinCVaR R-vine ARMA-EGARCH & 66,95 & 8,94 & 8,23 & 0,844 & 1,185 & -15,74 & 0,568 & 1,16 & 6,2 \\
+MinCVaR copule gaussienne & 66,13 & 8,85 & 8,13 & 0,843 & 1,188 & -15,60 & 0,568 & 1,15 & 5,9 \\
+\bottomrule
+\end{tabular}}
+\caption{Performance des stratégies hors échantillon, coûts de transaction inclus}
+\label{tab:perf}
+\end{table}
+
+La CVaR R-vine ARMA-EGARCH obtient un rendement total de 66,95\,\%, contre 55,73\,\% pour le minimum de variance historique. Les ratios de Sharpe sont respectivement de 0,844 et 0,660. À marges identiques, la CVaR avec copule gaussienne obtient un Sharpe de 0,843. Le portefeuille équipondéré atteint un rendement total de 278,09\,\% et un maximum drawdown de -34,70\,\%.
+
+\subsection{Évolution des performances et des poids}
+
+La Figure~\ref{fig:relative} rapporte la richesse cumulée de chaque stratégie à celle du minimum de variance historique. Entre le 20 février et le 23 mars 2020, le rendement cumulé de la CVaR R-vine ARMA-EGARCH est de -8,83\,\%, contre -9,62\,\% pour le minimum de variance historique et -7,82\,\% pour la CVaR avec copule gaussienne.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/04_performance_relative.png}
+\caption{Performance relative au minimum de variance historique, hors portefeuille équipondéré}
+\label{fig:relative}
+\end{figure}
+
+Les poids hebdomadaires de la Figure~\ref{fig:poids} correspondent au premier tirage pour la CVaR R-vine ARMA-EGARCH. En moyenne, le portefeuille alloue 49,9\,\% au BND, 28,2\,\% au SPY, 21,6\,\% à l'or et 0,3\,\% au Bitcoin. Ce faible poids du Bitcoin limite l'effet de ses dépendances de queue sur l'allocation.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/05_poids.png}
+\caption{Poids hebdomadaires des portefeuilles de CVaR R-vine ARMA-EGARCH et de CVaR historique}
+\label{fig:poids}
+\end{figure}
+
+\subsection{Significativité des écarts et bruit Monte Carlo}\label{sec:bruit}
+
+Les écarts sont évalués par un bootstrap circulaire par blocs \citep{politis1992}, à partir des rendements quotidiens appariés. Nous utilisons 2\,000 réplications et des blocs de 20 séances. Les écarts sont calculés à partir de la première graine.
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Stratégie comparée & $\Delta$ Sharpe & p-valeur & $\Delta$ CVaR (pts) & p-valeur & $\Delta$ Max DD (pts) & p-valeur \\
+\midrule
+Équipondéré (1/N) & -0,343 & 0,433 & -1,510 & 0,000 & 18,885 & 0,004 \\
+MinVar historique & 0,186 & 0,179 & -0,063 & 0,147 & 0,842 & 0,573 \\
+MinCVaR historique & 0,204 & 0,182 & -0,075 & 0,112 & 1,227 & 0,406 \\
+MinVar R-vine ARMA-EGARCH & 0,011 & 0,564 & 0,007 & 0,222 & -0,190 & 0,402 \\
+MinCVaR copule gaussienne & -0,031 & 0,386 & 0,026 & 0,093 & -0,464 & 0,441 \\
+\bottomrule
+\end{tabular}}
+\caption{Écarts entre la CVaR R-vine ARMA-EGARCH et les autres stratégies}
+\end{table}
+
+Pour le ratio de Sharpe, la comparaison avec le minimum de variance historique donne une p-valeur de 0,179, et la comparaison avec la CVaR gaussienne donne une p-valeur de 0,386. Ces écarts de Sharpe ne sont pas significatifs au seuil de 5\,\%.
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Stratégie & Scénarios & Sharpe & Rendement total (\%) & Max DD (\%) \\
+\midrule
+MinCVaR R-vine ARMA-EGARCH & 10\,000 & 0,827 -- 0,865 & 65,78 -- 68,30 & -15,92 -- -15,51 \\
+MinCVaR R-vine ARMA-EGARCH & 500 & 0,795 -- 0,937 & 62,85 -- 74,08 & -16,34 -- -15,43 \\
+MinCVaR copule gaussienne & 10\,000 & 0,800 -- 0,877 & 63,25 -- 68,07 & -15,93 -- -15,27 \\
+\bottomrule
+\end{tabular}}
+\caption{Minimum et maximum sur les cinq graines}
+\label{tab:mc}
+\end{table}
+
+Pour la CVaR R-vine ARMA-EGARCH, le Sharpe varie de 0,795 -- 0,937 avec 500 scénarios et de 0,827 -- 0,865 avec 10\,000 scénarios. La dispersion entre les tirages donne une mesure de la sensibilité des résultats au nombre de scénarios.
+
+\subsection{Backtests de VaR et d'Expected Shortfall}
+
+Nous calculons la VaR à 95\,\% et 99\,\% et l'Expected Shortfall à 97,5\,\% sur 1,508 séances pour le portefeuille équipondéré. Les paramètres sont réestimés chaque semaine et la volatilité conditionnelle est mise à jour chaque jour. Nous appliquons les tests de \citet{kupiec1995} et de \citet{christoffersen1998} pour la VaR et le test de \citet{mcneil2000} pour l'ES.
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}
+\toprule
+Modèle & Dépass. & p Kupiec & p Christ. & Dépass. & p Kupiec & p Christ. & p ES \\
+ & VaR 95\,\% & 95\,\% & 95\,\% & VaR 99\,\% & 99\,\% & 99\,\% & 97,5\,\% \\
+\midrule
+R-vine ARMA-EGARCH & 4,78 & 0,686 & 0,878 & 1,06 & 0,814 & 0,819 & 0,333 \\
+EGARCH + copule gaussienne & 4,78 & 0,686 & 0,878 & 1,06 & 0,814 & 0,819 & 0,264 \\
+EGARCH + indépendance & 6,50 & 0,011 & 0,021 & 1,26 & 0,329 & 0,488 & 0,692 \\
+Simulation historique (252 j) & 4,58 & 0,443 & 0,665 & 1,33 & 0,225 & 0,366 & 0,168 \\
+Variance-covariance normale (252 j) & 4,04 & 0,079 & 0,137 & 1,33 & 0,225 & 0,366 & 0,022 \\
+\bottomrule
+\end{tabular}}
+\caption{Backtests de VaR et d'ES du portefeuille équipondéré}
+\label{tab:var}
+\end{table}
+
+Les taux de dépassement de la R-vine ARMA-EGARCH sont de 4,78\,\% et 1,06\,\%, pour des niveaux attendus de 5\,\% et 1\,\%. Avec la copule gaussienne, ils s'établissent à 4,78\,\% et 1,06\,\%. Avec l'indépendance, le taux de dépassement de la VaR à 95\,\% atteint 6,50\,\% (p-valeur de Kupiec de 0,011). Le test d'ES donne une p-valeur de 0,333 pour la R-vine ARMA-EGARCH et de 0,264 pour la copule gaussienne. Au seuil de 5\,\%, les tests de couverture de la VaR et le test d'ES ne rejettent aucun de ces deux modèles.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/06_var99.png}
+\caption{Pertes quotidiennes du portefeuille équipondéré et prévisions de VaR à 99\,\%}
+\end{figure}
+
+\subsection{Implications pratiques}
+
+La rotation annuelle de la CVaR R-vine ARMA-EGARCH est de 6,2 fois le portefeuille, contre 0,8 pour le minimum de variance historique. Cet écart compte dans la lecture des performances nettes. La proximité des résultats entre les deux copules à marges identiques doit être appréciée au regard des poids observés, en particulier de la faible allocation au Bitcoin.
+\end{correction}
+
+\section{Conclusion}
+
+Cette étude a atteint son objectif en utilisant l'approche méthodologique ARMA-GARCH-Vine Copulas pour quantifier les dépendances extrêmes entre le marché des actions (SPY), le Bitcoin (BTC), les obligations (BND) et l'Or (GOLD) sur une période s'étendant de 2016 à 2025. L'analyse des dépendances a permis de déceler une rupture structurelle majeure dans les relations entre les actifs, confirmant la critique selon laquelle les corrélations linéaires traditionnelles sous-estiment systématiquement les risques de co-mouvements extrêmes, particulièrement en période de crise. Les conclusions clés de cette modélisation sont les suivantes :
+
+\begin{enumerate}
+  \item Le Bitcoin a transité d'un actif quasi-indépendant (\corr{indépendance avec GOLD et SPY} pré-2020) vers un composant intégré du risque systémique (\corr{$\tau = 0.24$ avec SPY post-COVID, autour de 0.25 en 2025}), \corr{perdant l'essentiel de sa capacité de diversification. Cette intégration se manifeste surtout par la dépendance moyenne : la dépendance de queue inférieure SPY-BTC reste modérée (0.09 pendant la crise, 0.12 après).} Les obligations ont vu leur fonction de couverture se détériorer fondamentalement, la relation BND-SPY basculant d'une dépendance négative protectrice (\corr{$\tau = -0.14$, LTD = 0.01} pré-COVID) vers une corrélation positive persistante (\corr{$\tau = 0.14$, UTD/LTD = 0.12} post-crise), amplifiée par les pressions inflationnistes structurelles. \corr{En 2022, toutes les stratégies à risque minimal ont ainsi perdu environ 10\,\%, obligations et actions chutant ensemble.} La dynamique des actifs refuges elle-même s'est transformée, GOLD-BND maintenant une dépendance positive mais avec des queues considérablement moins épaisses post-2022, signalant une normalisation partielle après les extrêmes de 2020-2021.
+  \item \corr{Une correction méthodologique s'est révélée décisive : la transformation des résidus standardisés en uniformes doit utiliser la loi de Student standardisée. La standardisation intervient aussi dans la simulation des rendements utilisée pour la mesure du risque.}
+  \item \corr{En allocation, la stratégie de CVaR R-vine ARMA-EGARCH obtient un Sharpe de 0,844, contre 0,660 pour le minimum de variance historique. Avec les mêmes marges et une copule gaussienne, le Sharpe atteint 0,843. La comparaison entre les deux stratégies de CVaR donne une p-valeur de 0,386. Le faible poids du Bitcoin dans les portefeuilles à risque minimal limite l'effet de ses dépendances de queue.}
+\end{enumerate}
+
+En somme, ce travail fournit aux investisseurs institutionnels un cadre qui va au-delà des mesures de corrélation classiques pour la gestion du risque en portefeuille multi-actifs, particulièrement lors de l'intégration de crypto-actifs.
+
+Les résultats obtenus ouvrent la voie à des développements futurs visant à traduire cette modélisation du risque en décisions concrètes d'allocation de portefeuille.
+
+Les extensions futures prometteuses incluent l'intégration de coûts de transaction réalistes pour optimiser la fréquence de recalibration, l'élargissement de l'univers d'investissement pour tester la scalabilité en dimension supérieure, et surtout le développement de Vine Copulas conditionnelles intégrant des variables macroéconomiques exogènes (inflation anticipée, taux réels, VIX). Cette dernière extension transformerait le modèle d'un outil réactif en système d'allocation véritablement prédictif, anticipant les changements de régime avant les épisodes de stress plutôt que de simplement les gérer efficacement durant leur occurrence.
+\corr{Une autre extension consisterait à évaluer l'apport de la Vine Copula sur des portefeuilles où le Bitcoin a un poids significatif (contrainte de poids minimal, objectif de rendement), là où les dépendances asymétriques devraient peser sur l'allocation.}
+
+% =====================================================================================================
+\begin{correction}
+\begin{thebibliography}{99}
+\bibitem[Aas et~al.(2009)]{aas2009} Aas, K., Czado, C., Frigessi, A. and Bakken, H. (2009). ``Pair-copula constructions of multiple dependence''. In: \emph{Insurance: Mathematics and Economics} 44.2, pp.~182--198.
+\bibitem[Bedford and Cooke(2002)]{bedford2002} Bedford, T. and Cooke, R. M. (2002). ``Vines -- a new graphical model for dependent random variables''. In: \emph{The Annals of Statistics} 30.4, pp.~1031--1068.
+\bibitem[Christoffersen(1998)]{christoffersen1998} Christoffersen, P. F. (1998). ``Evaluating interval forecasts''. In: \emph{International Economic Review} 39.4, pp.~841--862.
+\bibitem[Dissmann et~al.(2013)]{dissmann2013} Dissmann, J., Brechmann, E. C., Czado, C. and Kurowicka, D. (2013). ``Selecting and estimating regular vine copulae and application to financial returns''. In: \emph{Computational Statistics \& Data Analysis} 59, pp.~52--69.
+\bibitem[Evkaya et~al.(2024)]{evkaya2024} Evkaya, O. et al. (2024). ``Vine copula approach to understand the financial dependence of the Istanbul stock exchange index''. In: \emph{Computational Economics} 64.5, pp.~2935--2980.
+\bibitem[Ghalanos(s.d.)]{rugarch} Ghalanos, A. \emph{rugarch: Univariate GARCH models}. R package.
+\bibitem[Kupiec(1995)]{kupiec1995} Kupiec, P. H. (1995). ``Techniques for verifying the accuracy of risk measurement models''. In: \emph{The Journal of Derivatives} 3.2, pp.~73--84.
+\bibitem[McNeil and Frey(2000)]{mcneil2000} McNeil, A. J. and Frey, R. (2000). ``Estimation of tail-related risk measures for heteroscedastic financial time series: an extreme value approach''. In: \emph{Journal of Empirical Finance} 7.3--4, pp.~271--300.
+\bibitem[Nelson(1991)]{nelson1991} Nelson, D. B. (1991). ``Conditional heteroskedasticity in asset returns: A new approach''. In: \emph{Econometrica} 59.2, pp.~347--370.
+\bibitem[Politis and Romano(1992)]{politis1992} Politis, D. N. and Romano, J. P. (1992). ``A circular block-resampling procedure for stationary data''. In: LePage, R. and Billard, L. (eds.), \emph{Exploring the Limits of Bootstrap}. Wiley, pp.~263--270.
+\bibitem[Rockafellar and Uryasev(2000)]{rockafellar2000} Rockafellar, R. T. and Uryasev, S. (2000). ``Optimization of conditional value-at-risk''. In: \emph{Journal of Risk} 2.3, pp.~21--41.
+\bibitem[Schepsmeier et~al.(s.d.)]{vinecopula} Schepsmeier, U. et al. \emph{VineCopula: Statistical inference of vine copulas}. R package.
+\bibitem[Sklar(1959)]{sklar1959} Sklar, M. (1959). ``Fonctions de répartition à n dimensions et leurs marges''. In: \emph{Annales de l'ISUP}. Vol.~8. 3, pp.~229--231.
+\end{thebibliography}
+\end{correction}
