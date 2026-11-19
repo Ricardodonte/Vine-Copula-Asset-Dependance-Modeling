@@ -1,12 +1,12 @@
-# Données locales
+# Local data
 
-Placer les deux fichiers dans ce dossier avant de lancer l’analyse.
+Place both input files in this directory before running the analysis.
 
-| Fichier | Contenu |
+| File | Contents |
 | --- | --- |
-| `prix_spy_btc_bnd.csv` | Prix ajustés de SPY, BTC-USD et BND. La première colonne contient les dates au format `AAAA-MM-JJ`. Les colonnes de prix sont `SPY`, `BTC` et `BND`. |
-| `XAU_USD.csv` | Export TradingView de l’or. Le lecteur utilise les deux premières colonnes, avec les dates au format `MM/JJ/AAAA` et les prix de clôture. |
+| `prix_spy_btc_bnd.csv` | Adjusted prices for SPY, BTC-USD, and BND. The first column contains dates in `YYYY-MM-DD` format. The price columns are `SPY`, `BTC`, and `BND`. |
+| `XAU_USD.csv` | TradingView gold export. The reader uses the first two columns for dates in `MM/DD/YYYY` format and closing prices. |
 
-Pour régénérer le premier fichier depuis Yahoo Finance, installer `quantmod` puis lancer `Rscript scripts/export_prix.R` depuis la racine. Le fichier d’origine de l’or est à placer manuellement. Utiliser les mêmes exports de prix que le rapport pour comparer les chiffres.
+To regenerate the first file from Yahoo Finance, install `quantmod` and run `Rscript scripts/export_prices.R` from the repository root. Place the gold export in this directory manually. Use the same price exports as the study to compare the numbers.
 
-L’analyse aligne les prix sur les dates communes et calcule les log-rendements sur la période 2016–2025. Les deux CSV restent locaux.
+The analysis aligns prices on their common dates and calculates log returns for 2016–2025. Both CSV files stay local.

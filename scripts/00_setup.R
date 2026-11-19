@@ -5,8 +5,8 @@ suppressPackageStartupMessages({
 
 for (f in list.files("R", full.names = TRUE, pattern = "\\.R$")) source(f, encoding = "UTF-8")
 
-PRICES_CSV <- "data/prix_spy_btc_bnd.csv"   # exporté avec export_prix.R (quantmod / Yahoo)
-GOLD_CSV   <- "data/XAU_USD.csv"            # TradingView, comme dans le projet d'origine
+PRICES_CSV <- "data/prix_spy_btc_bnd.csv"   # exported by export_prices.R (quantmod / Yahoo)
+GOLD_CSV   <- "data/XAU_USD.csv"            # TradingView gold export
 BACKEND <- egarch_backend()
 OUT_DIR <- file.path("results", BACKEND)
 OUT_TAB <- file.path(OUT_DIR, "tables")
@@ -17,12 +17,12 @@ for (d in c(OUT_TAB, OUT_FIG, OUT_CACHE)) dir.create(d, recursive = TRUE, showWa
 ORDERS <- rbind(SPY = c(1, 1), BTC = c(0, 0), BND = c(0, 0), GOLD = c(0, 0))
 
 PERIODS <- list(
-  `Pré-COVID (2016-01 → 2019-11)`  = c("2016-01-04", "2019-11-01"),
+  `Pre-COVID (2016-01 → 2019-11)`  = c("2016-01-04", "2019-11-01"),
   `COVID (2020-01 → 2021-12)`      = c("2020-01-01", "2022-01-01"),
   `Post-COVID (2022-01 → 2025-11)` = c("2022-01-01", "2025-11-03"))
 
 DATA <- load_returns(PRICES_CSV, GOLD_CSV)
-cat(sprintf("Données : %d rendements quotidiens du %s au %s\n",
+cat(sprintf("Data: %d daily returns from %s to %s\n",
             nrow(DATA$R), min(DATA$dates), max(DATA$dates)))
 
 write_table <- function(df, name, digits = 4) {

@@ -24,8 +24,8 @@ load_returns <- function(prices_path, gold_path, start = "2016-01-01", end = "20
 }
 
 describe_returns <- function(R) {
-  f <- function(x) c(Moyenne = mean(x), `Écart-type` = sd(x), Asymétrie = moments::skewness(x),
+  f <- function(x) c(Mean = mean(x), `Std. dev.` = sd(x), Skewness = moments::skewness(x),
                      Kurtosis = moments::kurtosis(x), Min = min(x), Q1 = unname(quantile(x, 0.25)),
-                     Médiane = median(x), Q3 = unname(quantile(x, 0.75)), Max = max(x))
+                     Median = median(x), Q3 = unname(quantile(x, 0.75)), Max = max(x))
   round(sapply(as.data.frame(R), f), 4)
 }

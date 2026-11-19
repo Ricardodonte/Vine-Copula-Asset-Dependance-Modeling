@@ -42,7 +42,7 @@ fit_egarch_rugarch <- function(x, p = 0, q = 0) {
   fit <- rugarch::ugarchfit(egarch_spec(p, q), data = x, solver = "hybrid",
                            solver.control = list(rseed = 42L))
   if (rugarch::convergence(fit) != 0L) {
-    stop("rugarch : l'ajustement EGARCH n'a pas convergé.", call. = FALSE)
+    stop("The rugarch EGARCH fit did not converge.", call. = FALSE)
   }
 
   par <- rugarch::coef(fit)
@@ -67,7 +67,7 @@ egarch_update_rugarch <- function(fit, x_new) {
   n <- length(x_new)
   if (n == 0L) return(list(mean_next = fit$mean_next, sigma_next = fit$sigma_next))
 
-  # Même initialisation que sur la fenêtre d'ajustement.
+  # Reuse the initialization from the estimation window.
   spec <- egarch_spec(fit$p, fit$q, fixed = as.list(fit$par))
   forecast <- rugarch::ugarchforecast(spec, data = c(fit$x, x_new),
                                      n.ahead = 1, n.roll = n, out.sample = n)
@@ -80,7 +80,7 @@ param_names <- function(p, q, labels = TRUE) {
                   "omega", "alpha1", "gamma1", "beta1", "shape")
   if (labels) {
     parameters[match(c("alpha1", "gamma1", "shape"), parameters)] <-
-      c("alpha1 (signe)", "gamma1 (taille)", "shape (nu)")
+      c("alpha1 (sign)", "gamma1 (magnitude)", "shape (nu)")
   }
   parameters
 }

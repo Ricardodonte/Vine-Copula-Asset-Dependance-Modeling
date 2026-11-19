@@ -98,12 +98,11 @@ egarch_update_manual <- function(fit, x_new) {
 
 egarch_se_manual <- function(fit) {
   if (fit$convergence != 0) {
-    warning("EGARCH : ajustement non convergent, écarts-types indisponibles.", call. = FALSE)
+    warning("The EGARCH fit did not converge. Standard errors are unavailable.", call. = FALSE)
     return(rep(NA_real_, length(fit$par)))
   }
   nll <- function(th) egarch_nll(th, fit$x, fit$p, fit$q, fit$ln_s2_0)
-  # Le pas par défaut peut pousser beta au-dessus de 1 et rendre le filtre instable.
+  # The default step can push beta above 1 and destabilize the filter.
   H <- numDeriv::hessian(nll, fit$par, method.args = list(d = 1e-4, eps = 1e-5))
   tryCatch(sqrt(diag(chol2inv(chol(H)))), error = function(e) rep(NA_real_, length(fit$par)))
 }
-
