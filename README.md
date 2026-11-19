@@ -2,7 +2,7 @@
 
 This study models tail dependence among SPY, Bitcoin, BND, and gold with ARMA-EGARCH margins and an R-vine copula. The out-of-sample backtests compare portfolio allocation strategies and evaluate Value at Risk (VaR) and Expected Shortfall (ES) forecasts.
 
-[English report](report/report.pdf) | [Original French report](report/report-fr.pdf)
+[Original French report](report/report-fr.pdf) | [English translation](report/report.pdf)
 
 ## Repository structure
 
@@ -41,3 +41,7 @@ latexmk -pdf -jobname=report main.tex
 ```
 
 The figures required to compile the report are in `report/figures/`. Git ignores raw data, generated results, and LaTeX build files.
+
+## AI disclosure
+
+This README was written by Claude Sonnet. The original report was written in French, and Claude Sonnet translated it into English.
