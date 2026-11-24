@@ -44,4 +44,4 @@ The figures required to compile the report are in `report/figures/`. Git ignores
 
 ## AI disclosure
 
-This README was written by Claude Sonnet. The original report was written in French, and Claude Sonnet translated it into English.
+This README was written by Claude Sonnet. The original report was written in French, and Claude Sonnet translated it into English. The text was reviewed and reflects the work I have done here
